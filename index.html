@@ -1,0 +1,4071 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#08040e" />
+    <title>MemeChess</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <style>
+      :root {
+        --bg: #08040e;
+        --fg: #f2f2f2;
+        --card: #1a1226;
+        --ac: #a855f7;
+        --lt: #7c3aed;
+        --dk: #0a0416;
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          16px/1.4 system-ui,
+          -apple-system,
+          sans-serif;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      .scr {
+        display: none;
+        flex: 1;
+        padding: 12px;
+        max-width: 560px;
+        margin: 0 auto;
+        width: 100%;
+      }
+      .scr.on {
+        display: flex;
+        flex-direction: column;
+        animation: slidein 0.28s ease-out;
+      }
+      @keyframes slidein {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadein {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes pop {
+        from {
+          transform: scale(0.7);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      @keyframes qpop {
+        from {
+          transform: scale(0.3);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      @keyframes blinkfade {
+        0% {
+          opacity: 1;
+        }
+        60% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+      @keyframes dotpulse {
+        50% {
+          transform: scale(1.15);
+        }
+      }
+      @keyframes checkpulse {
+        0%,
+        100% {
+          box-shadow:
+            inset 0 0 0 3px #ef4444,
+            inset 0 0 22px 6px rgba(239, 68, 68, 0.75);
+        }
+        50% {
+          box-shadow:
+            inset 0 0 0 3px #ff2a2a,
+            inset 0 0 32px 12px rgba(239, 68, 68, 1);
+        }
+      }
+      @keyframes bannerin {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes msgin {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes sl {
+        from {
+          transform: scale(4);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      @keyframes checkbadge {
+        from {
+          transform: translate(-50%, -10px);
+          opacity: 0;
+        }
+        to {
+          transform: translate(-50%, 0);
+          opacity: 1;
+        }
+      }
+      h1 {
+        font:
+          900 clamp(32px, 10vw, 44px) Impact,
+          sans-serif;
+        text-align: center;
+        margin: 16px 0 4px;
+        color: var(--ac);
+        letter-spacing: 1px;
+        animation: pop 0.5s;
+      }
+      .sub {
+        text-align: center;
+        opacity: 0.6;
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 15px 16px;
+        margin: 8px 0;
+        border: 0;
+        border-radius: 12px;
+        background: var(--card);
+        color: var(--fg);
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn.p {
+        background: var(--ac);
+        color: #fff;
+        text-align: center;
+        font-size: 19px;
+        border-bottom: 4px solid #7e22ce;
+      }
+      .btn.g {
+        background: #16a34a;
+        color: #fff;
+        text-align: center;
+        font-size: 18px;
+        border-bottom: 4px solid #15803d;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+      .top button {
+        background: none;
+        border: 0;
+        color: var(--fg);
+        font-size: 26px;
+        padding: 0 6px;
+        cursor: pointer;
+      }
+      .seg {
+        display: flex;
+        gap: 6px;
+        margin: 10px 0;
+      }
+      .seg button {
+        flex: 1;
+        padding: 12px;
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background: var(--card);
+        color: var(--fg);
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .seg .on {
+        border-color: var(--ac);
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--card);
+        padding: 12px;
+        border-radius: 12px;
+        margin: 8px 0;
+      }
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--ac);
+        height: 30px;
+      }
+      .big {
+        font-size: 20px;
+        font-weight: 800;
+        text-align: center;
+        padding: 4px 0;
+      }
+      #ev {
+        height: 22px;
+        background: #3a2a4a;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+        margin: 4px 0;
+      }
+      #evf {
+        height: 100%;
+        background: #e8e8ee;
+        width: 50%;
+        transition: width 0.4s;
+      }
+      #evt {
+        position: absolute;
+        right: 8px;
+        top: 0;
+        font-weight: 700;
+        color: #111;
+        font-size: 13px;
+        line-height: 22px;
+      }
+      #coach {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        margin: 6px 0;
+      }
+      #face {
+        width: 72px;
+        height: 72px;
+        flex: none;
+        border-radius: 50%;
+        background: #fff;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+      }
+      #face svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      #ct {
+        background: #fff;
+        color: #1a1226;
+        padding: 10px 14px;
+        border-radius: 14px;
+        flex: 1;
+        font-size: 14px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+      #ct.flash {
+        animation: msgin 0.3s;
+      }
+      #log {
+        max-height: 0;
+        overflow: hidden;
+        font-size: 13px;
+        margin: 0;
+        transition: max-height 0.25s;
+      }
+      #log.open {
+        max-height: 180px;
+        overflow-y: auto;
+        margin: 6px 0;
+      }
+      #log div {
+        padding: 5px 10px;
+        margin: 3px 0;
+        border-radius: 10px;
+        background: #1a1226;
+      }
+      #log .u {
+        background: var(--ac);
+        text-align: right;
+        color: #fff;
+      }
+      #logbtn {
+        background: none;
+        border: 0;
+        color: #9a9a9a;
+        font-size: 12px;
+        padding: 2px 6px;
+        cursor: pointer;
+        align-self: flex-start;
+      }
+      .clk {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        margin: 4px 0;
+        font-size: 14px;
+      }
+      .clk b {
+        background: #241a33;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-variant-numeric: tabular-nums;
+      }
+      #opname {
+        display: none;
+        background: linear-gradient(90deg, #1e1b4b, #312e81, #1e1b4b);
+        color: #fde68a;
+        padding: 8px 14px;
+        border-radius: 10px;
+        margin: 6px 0;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        border-left: 4px solid #facc15;
+        box-shadow: 0 2px 12px rgba(168, 85, 247, 0.35);
+      }
+      #opname.on {
+        display: block;
+        animation: bannerin 0.35s;
+      }
+      #opname .icon {
+        opacity: 0.9;
+        margin-right: 6px;
+      }
+      #bdwrap {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #000;
+        aspect-ratio: 1;
+        width: 100%;
+        max-width: min(92vw, 480px);
+        margin: 0 auto;
+        box-shadow: 0 6px 24px rgba(168, 85, 247, 0.35);
+      }
+      #bd {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+        width: 100%;
+        height: 100%;
+        user-select: none;
+        touch-action: manipulation;
+      }
+      .sq {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .sq svg {
+        width: 96%;
+        height: 96%;
+        display: block;
+        z-index: 3;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
+      }
+      .sq.lm::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(250, 204, 21, 0.45);
+        pointer-events: none;
+        z-index: 1;
+      }
+      .sq.ht::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(34, 197, 94, 0.5);
+        pointer-events: none;
+        z-index: 1;
+      }
+      .sq.blunder::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(239, 68, 68, 0.7);
+        pointer-events: none;
+        animation: blinkfade 1.6s forwards;
+        z-index: 1;
+      }
+      .sq.incheck::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle,
+          rgba(239, 68, 68, 0.35) 0%,
+          rgba(239, 68, 68, 0) 70%
+        );
+        pointer-events: none;
+        z-index: 1;
+      }
+      .sq.incheck {
+        animation: checkpulse 1.1s ease-in-out infinite;
+      }
+      .sq .checkbadge {
+        position: absolute;
+        top: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ef4444;
+        color: #fff;
+        font-weight: 900;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        z-index: 5;
+        letter-spacing: 1px;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+        animation: checkbadge 0.4s;
+      }
+      .sq .qbadge {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        font-weight: 900;
+        font-size: 14px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        z-index: 6;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.85);
+        animation: qpop 0.3s;
+      }
+      .qbadge.q-blunder {
+        background: #dc2626;
+        color: #fff;
+      }
+      .qbadge.q-mistake {
+        background: #ea580c;
+        color: #fff;
+      }
+      .qbadge.q-inacc {
+        background: #eab308;
+        color: #111;
+      }
+      .qbadge.q-good {
+        background: #22c55e;
+        color: #052e16;
+      }
+      .qbadge.q-best {
+        background: #0ea5e9;
+        color: #fff;
+      }
+      .sq.sel {
+        outline: 4px solid #facc15;
+        outline-offset: -4px;
+        z-index: 4;
+      }
+      .sq .mvdot {
+        width: 36%;
+        height: 36%;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 35% 35%,
+          #fff,
+          #e9d5ff 60%,
+          #a855f7 100%
+        );
+        box-shadow:
+          0 0 0 3px #1a0b2e,
+          0 0 16px 5px rgba(168, 85, 247, 0.95);
+        position: absolute;
+        z-index: 2;
+        animation: dotpulse 1.4s ease-in-out infinite;
+      }
+      .sq.cap::before {
+        content: "";
+        position: absolute;
+        inset: 2%;
+        border-radius: 50%;
+        border: 3px solid rgba(239, 68, 68, 0.85);
+        z-index: 2;
+        pointer-events: none;
+      }
+      .sq[data-r]::before {
+        content: attr(data-r);
+        position: absolute;
+        top: 0;
+        left: 3px;
+        font-size: 10px;
+        opacity: 0.55;
+        color: #000;
+        z-index: 2;
+      }
+      .sq[data-f]::after {
+        content: attr(data-f);
+        position: absolute;
+        bottom: 0;
+        right: 4px;
+        font-size: 10px;
+        opacity: 0.55;
+        color: #000;
+        z-index: 2;
+      }
+      .sq.dk[data-r]::before,
+      .sq.dk[data-f]::after {
+        color: #ccc;
+      }
+      .sh {
+        animation: sh 0.35s;
+      }
+      .bg {
+        animation: sh 0.6s;
+      }
+      @keyframes sh {
+        20% {
+          transform: translate(-6px, 3px);
+        }
+        40% {
+          transform: translate(6px, -4px);
+        }
+        60% {
+          transform: translate(-4px, -3px);
+        }
+        80% {
+          transform: translate(4px, 3px);
+        }
+      }
+      #ml {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 8px 0;
+        white-space: nowrap;
+        scrollbar-width: thin;
+      }
+      #ml span {
+        background: var(--card);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 13px;
+      }
+      #ml .q {
+        color: #f87171;
+      }
+      #bar {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 6px;
+      }
+      #bar button {
+        background: none;
+        border: 0;
+        color: #bbb;
+        font-weight: 700;
+        padding: 8px 4px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      #opt {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 10;
+        background: var(--card);
+        border: 0;
+        color: var(--fg);
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      }
+      #optpanel {
+        display: none;
+        position: fixed;
+        top: 58px;
+        right: 12px;
+        z-index: 11;
+        background: #241a33;
+        border-radius: 12px;
+        padding: 6px;
+        min-width: 200px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      }
+      #optpanel.on {
+        display: block;
+        animation: slidein 0.15s;
+      }
+      #optpanel button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: 0;
+        color: var(--fg);
+        padding: 12px 14px;
+        font-weight: 700;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      #optpanel button:active {
+        background: #3a2a4a;
+      }
+      #tp {
+        display: none;
+        background: var(--ac);
+        padding: 8px;
+        border-radius: 8px;
+        font-weight: 700;
+        margin: 6px 0;
+        color: #fff;
+        text-align: center;
+        font-size: 14px;
+      }
+      .tr #tp {
+        display: block;
+      }
+      .tr #ev,
+      .tr .pl,
+      .tr #ml,
+      .tr #opname {
+        display: none !important;
+      }
+      #chatwrap {
+        margin: 8px 0;
+      }
+      #qr {
+        display: flex;
+        gap: 6px;
+        background: #1a1226;
+        border-radius: 12px;
+        padding: 5px 8px;
+      }
+      #qr input {
+        flex: 1;
+        background: none;
+        border: 0;
+        color: inherit;
+        outline: 0;
+        padding: 8px 4px;
+        font-size: 14px;
+        min-width: 0;
+      }
+      #qr button {
+        background: var(--ac);
+        color: #fff;
+        border: 0;
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      #end {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        background: rgba(0, 0, 0, 0.88);
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      #end.on {
+        display: flex;
+        animation: fadein 0.3s;
+      }
+      #endcard {
+        background: #1a1226;
+        border-radius: 16px;
+        padding: 22px;
+        max-width: 420px;
+        width: 100%;
+        text-align: center;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slidein 0.4s;
+      }
+      #endword {
+        font:
+          900 clamp(28px, 8vw, 40px) Impact,
+          sans-serif;
+        color: #facc15;
+        margin-bottom: 8px;
+        animation: pop 0.55s;
+      }
+      #endsub {
+        opacity: 0.9;
+        margin-bottom: 16px;
+        font-size: 15px;
+      }
+      #endstats {
+        display: flex;
+        justify-content: space-around;
+        margin: 16px 0;
+        gap: 8px;
+      }
+      .stat {
+        text-align: center;
+        flex: 1;
+      }
+      .stat b {
+        display: block;
+        font-size: 26px;
+        color: var(--ac);
+      }
+      .stat small {
+        opacity: 0.6;
+        font-size: 10px;
+        text-transform: uppercase;
+      }
+      #endbtns {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      #endbtns button {
+        padding: 14px;
+        border-radius: 12px;
+        border: 0;
+        font-weight: 800;
+        background: var(--ac);
+        color: #fff;
+        cursor: pointer;
+        font-size: 15px;
+      }
+      #endbtns button.sec {
+        background: #2a2733;
+        color: var(--fg);
+      }
+      #endbtns button.g {
+        background: #16a34a;
+      }
+      #fat {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        background: rgba(0, 0, 0, 0.97);
+        color: #fff;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+      #fat.on {
+        display: flex;
+      }
+      .f1 {
+        font:
+          900 clamp(40px, 13vw, 90px) Impact,
+          sans-serif;
+        color: #facc15;
+      }
+      .f2 {
+        font:
+          900 clamp(48px, 16vw, 110px) Impact,
+          sans-serif;
+        animation: sl 0.55s;
+      }
+      #review {
+        display: none;
+        flex-direction: column;
+      }
+      #review.on {
+        display: flex;
+      }
+      #rboard {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #000;
+        aspect-ratio: 1;
+        width: 100%;
+        max-width: min(92vw, 480px);
+        margin: 0 auto;
+      }
+      #rbd {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+        width: 100%;
+        height: 100%;
+      }
+      #rbd .sq {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      #rarrow {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 10;
+      }
+      #rnav {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin: 12px 0;
+      }
+      #rnav button {
+        background: var(--ac);
+        color: #fff;
+        border: 0;
+        border-radius: 10px;
+        padding: 11px 22px;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      #rnav button:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+      #rcomment {
+        background: #fff;
+        color: #1a1226;
+        padding: 12px 16px;
+        border-radius: 14px;
+        min-height: 56px;
+        font-size: 14px;
+        margin: 8px 0;
+        display: flex;
+        align-items: center;
+        line-height: 1.35;
+      }
+      .card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 14px;
+        margin: 8px 0;
+      }
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+      .card p {
+        margin: 0;
+        opacity: 0.7;
+        font-size: 13px;
+      }
+      .progbar {
+        height: 8px;
+        background: #2a2733;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+      .progbar > div {
+        height: 100%;
+        background: var(--ac);
+        transition: width 0.3s;
+      }
+      .drillrow {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .drillrow button {
+        flex: 1;
+        padding: 10px;
+        border-radius: 10px;
+        border: 0;
+        background: var(--ac);
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .drillrow button.sec {
+        background: #2a2733;
+        color: var(--fg);
+      }
+      .swatch {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--card);
+        padding: 10px 14px;
+        border-radius: 12px;
+        margin: 8px 0;
+      }
+      .swatch input[type="color"] {
+        width: 48px;
+        height: 34px;
+        border: 0;
+        background: none;
+        border-radius: 6px;
+        padding: 0;
+        cursor: pointer;
+      }
+      .swatch label {
+        flex: 1;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .volrow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--card);
+        padding: 10px 14px;
+        border-radius: 12px;
+        margin: 8px 0;
+      }
+      .volrow label {
+        min-width: 60px;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .volrow input[type="range"] {
+        flex: 1;
+      }
+      .volrow .volval {
+        min-width: 34px;
+        text-align: right;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--ac);
+      }
+      small {
+        opacity: 0.6;
+      }
+      #journeycard {
+        background: linear-gradient(135deg, #1e1b4b, #312e81);
+        border-radius: 14px;
+        padding: 16px;
+        margin: 8px 0;
+        border-left: 4px solid #facc15;
+      }
+      #journeycard h3 {
+        margin: 0 0 8px;
+        font-size: 17px;
+        color: #fde68a;
+      }
+      #journeycard p {
+        margin: 0 0 10px;
+        font-size: 13px;
+        opacity: 0.9;
+      }
+      #journeycard .lvlrow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 10px;
+        padding: 8px 12px;
+        margin: 6px 0;
+      }
+      #journeycard .lvlrow .lvlname {
+        font-weight: 700;
+        font-size: 14px;
+      }
+      #journeycard .lvlrow .lvlstat {
+        font-size: 12px;
+        opacity: 0.85;
+      }
+      #journeycard .lvlrow.done {
+        border-left: 3px solid #22c55e;
+      }
+      #journeycard .lvlrow.current {
+        border-left: 3px solid #facc15;
+        background: rgba(250, 204, 21, 0.12);
+      }
+      #journeycard .lvlrow.locked {
+        opacity: 0.5;
+      }
+      #journeycard button {
+        margin-top: 8px;
+        width: 100%;
+        padding: 12px;
+        border-radius: 10px;
+        border: 0;
+        background: #facc15;
+        color: #111;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="0"
+      height="0"
+      style="position: absolute"
+      aria-hidden="true"
+    >
+      <symbol id="white-king" viewBox="0 0 45 45">
+        <g
+          fill="none"
+          fill-rule="evenodd"
+          stroke="#0a0a0a"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+        >
+          <path stroke-linejoin="miter" d="M22.5 11.63V6M20 8h5" />
+          <path
+            fill="#fff"
+            stroke-linecap="butt"
+            stroke-linejoin="miter"
+            d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"
+          />
+          <path
+            fill="#fff"
+            d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10z"
+          />
+          <path
+            d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0"
+          />
+        </g>
+      </symbol>
+      <symbol id="white-queen" viewBox="0 0 45 45">
+        <g
+          fill="#fff"
+          fill-rule="evenodd"
+          stroke="#0a0a0a"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+        >
+          <path
+            d="M8 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0m16.5-4.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0M41 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0M16 8.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0M33 9a2 2 0 1 1-4 0 2 2 0 1 1 4 0"
+          />
+          <path
+            stroke-linecap="butt"
+            d="M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15-5.5-14V25L7 14z"
+          />
+          <path
+            stroke-linecap="butt"
+            d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z"
+          />
+          <path
+            fill="none"
+            stroke-linecap="butt"
+            d="M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0"
+          />
+        </g>
+      </symbol>
+      <symbol id="white-rook" viewBox="0 0 45 45">
+        <g
+          fill="#fff"
+          fill-rule="evenodd"
+          stroke="#0a0a0a"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+        >
+          <path
+            stroke-linecap="butt"
+            d="M9 39h27v-3H9zm3-3v-4h21v4zm-1-22V9h4v2h5V9h5v2h5V9h4v5"
+          />
+          <path d="m34 14-3 3H14l-3-3" />
+          <path
+            stroke-linecap="butt"
+            stroke-linejoin="miter"
+            d="M31 17v12.5H14V17"
+          />
+          <path d="m31 29.5 1.5 2.5h-20l1.5-2.5" />
+          <path fill="none" stroke-linejoin="miter" d="M11 14h23" />
+        </g>
+      </symbol>
+      <symbol id="white-bishop" viewBox="0 0 45 45">
+        <g
+          fill="none"
+          fill-rule="evenodd"
+          stroke="#0a0a0a"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+        >
+          <g fill="#fff" stroke-linecap="butt">
+            <path
+              d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.35.49-2.32.47-3-.5 1.35-1.94 3-2 3-2z"
+            />
+            <path
+              d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"
+            />
+            <path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z" />
+          </g>
+          <path
+            stroke-linejoin="miter"
+            d="M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5"
+          />
+        </g>
+      </symbol>
+      <symbol id="white-knight" viewBox="0 0 45 45">
+        <g
+          fill="none"
+          fill-rule="evenodd"
+          stroke="#0a0a0a"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+        >
+          <path fill="#fff" d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21" />
+          <path
+            fill="#fff"
+            d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3"
+          />
+          <path
+            fill="#000"
+            d="M9.5 25.5a.5.5 0 1 1-1 0 .5.5 0 1 1 1 0m5.433-9.75a.5 1.5 30 1 1-.866-.5.5 1.5 30 1 1 .866.5"
+          />
+        </g>
+      </symbol>
+      <symbol id="white-pawn" viewBox="0 0 45 45">
+        <path
+          fill="#fff"
+          stroke="#0a0a0a"
+          stroke-linecap="round"
+          stroke-width="1.5"
+          d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z"
+        />
+      </symbol>
+      <symbol id="black-king" viewBox="0 0 45 45">
+        <g
+          fill="none"
+          fill-rule="evenodd"
+          stroke="#f0f0f0"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.4"
+        >
+          <path stroke-linejoin="miter" d="M22.5 11.63V6M20 8h5" />
+          <path
+            fill="#0a0a0a"
+            stroke-linecap="butt"
+            stroke-linejoin="miter"
+            d="M22.5 25s4.5-7.5 3-10.5c0 0-1-2.5-3-2.5s-3 2.5-3 2.5c-1.5 3 3 10.5 3 10.5"
+          />
+          <path
+            fill="#0a0a0a"
+            d="M11.5 37c5.5 3.5 15.5 3.5 21 0v-7s9-4.5 6-10.5c-4-6.5-13.5-3.5-16 4V27v-3.5c-3.5-7.5-13-10.5-16-4-3 6 5 10 5 10z"
+          />
+          <path
+            d="M11.5 30c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0m-21 3.5c5.5-3 15.5-3 21 0"
+          />
+        </g>
+      </symbol>
+      <symbol id="black-queen" viewBox="0 0 45 45">
+        <g
+          fill="#0a0a0a"
+          fill-rule="evenodd"
+          stroke="#f0f0f0"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.4"
+        >
+          <path
+            d="M8 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0m16.5-4.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0M41 12a2 2 0 1 1-4 0 2 2 0 1 1 4 0M16 8.5a2 2 0 1 1-4 0 2 2 0 1 1 4 0M33 9a2 2 0 1 1-4 0 2 2 0 1 1 4 0"
+          />
+          <path
+            stroke-linecap="butt"
+            d="M9 26c8.5-1.5 21-1.5 27 0l2-12-7 11V11l-5.5 13.5-3-15-3 15-5.5-14V25L7 14z"
+          />
+          <path
+            stroke-linecap="butt"
+            d="M9 26c0 2 1.5 2 2.5 4 1 1.5 1 1 .5 3.5-1.5 1-1.5 2.5-1.5 2.5-1.5 1.5.5 2.5.5 2.5 6.5 1 16.5 1 23 0 0 0 1.5-1 0-2.5 0 0 .5-1.5-1-2.5-.5-2.5-.5-2 .5-3.5 1-2 2.5-2 2.5-4-8.5-1.5-18.5-1.5-27 0z"
+          />
+          <path
+            fill="none"
+            stroke-linecap="butt"
+            d="M11.5 30c3.5-1 18.5-1 22 0M12 33.5c6-1 15-1 21 0"
+          />
+        </g>
+      </symbol>
+      <symbol id="black-rook" viewBox="0 0 45 45">
+        <g
+          fill="#0a0a0a"
+          fill-rule="evenodd"
+          stroke="#f0f0f0"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.4"
+        >
+          <path
+            stroke-linecap="butt"
+            d="M9 39h27v-3H9zm3-3v-4h21v4zm-1-22V9h4v2h5V9h5v2h5V9h4v5"
+          />
+          <path d="m34 14-3 3H14l-3-3" />
+          <path
+            stroke-linecap="butt"
+            stroke-linejoin="miter"
+            d="M31 17v12.5H14V17"
+          />
+          <path d="m31 29.5 1.5 2.5h-20l1.5-2.5" />
+          <path fill="none" stroke-linejoin="miter" d="M11 14h23" />
+        </g>
+      </symbol>
+      <symbol id="black-bishop" viewBox="0 0 45 45">
+        <g
+          fill="none"
+          fill-rule="evenodd"
+          stroke="#f0f0f0"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.4"
+        >
+          <g fill="#0a0a0a" stroke-linecap="butt">
+            <path
+              d="M9 36c3.39-.97 10.11.43 13.5-2 3.39 2.43 10.11 1.03 13.5 2 0 0 1.65.54 3 2-.68.97-1.65.99-3 .5-3.39-.97-10.11.46-13.5-1-3.39 1.46-10.11.03-13.5 1-1.35.49-2.32.47-3-.5 1.35-1.94 3-2 3-2z"
+            />
+            <path
+              d="M15 32c2.5 2.5 12.5 2.5 15 0 .5-1.5 0-2 0-2 0-2.5-2.5-4-2.5-4 5.5-1.5 6-11.5-5-15.5-11 4-10.5 14-5 15.5 0 0-2.5 1.5-2.5 4 0 0-.5.5 0 2z"
+            />
+            <path d="M25 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 1 1 5 0z" />
+          </g>
+          <path
+            stroke-linejoin="miter"
+            d="M17.5 26h10M15 30h15m-7.5-14.5v5M20 18h5"
+          />
+        </g>
+      </symbol>
+      <symbol id="black-knight" viewBox="0 0 45 45">
+        <g
+          fill="none"
+          fill-rule="evenodd"
+          stroke="#f0f0f0"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.4"
+        >
+          <path
+            fill="#0a0a0a"
+            d="M22 10c10.5 1 16.5 8 16 29H15c0-9 10-6.5 8-21"
+          />
+          <path
+            fill="#0a0a0a"
+            d="M24 18c.38 2.91-5.55 7.37-8 9-3 2-2.82 4.34-5 4-1.042-.94 1.41-3.04 0-3-1 0 .19 1.23-1 2-1 0-4.003 1-4-4 0-2 6-12 6-12s1.89-1.9 2-3.5c-.73-.994-.5-2-.5-3 1-1 3 2.5 3 2.5h2s.78-1.992 2.5-3c1 0 1 3 1 3"
+          />
+          <path
+            fill="#f0f0f0"
+            d="M9.5 25.5a.5.5 0 1 1-1 0 .5.5 0 1 1 1 0m5.433-9.75a.5 1.5 30 1 1-.866-.5.5 1.5 30 1 1 .866.5"
+          />
+          <path
+            fill="#f0f0f0"
+            d="m24.55 10.4-.45 1.45.5.15c3.15 1 5.65 2.49 7.9 6.75S35.75 29.06 35.25 39l-.05.5h2.25l.05-.5c.5-10.06-.88-16.85-3.25-21.34s-5.79-6.64-9.19-7.16z"
+            stroke="#f0f0f0"
+            stroke-width=".6"
+          />
+        </g>
+      </symbol>
+      <symbol id="black-pawn" viewBox="0 0 45 45">
+        <path
+          fill="#0a0a0a"
+          stroke="#f0f0f0"
+          stroke-linecap="round"
+          stroke-width="1.4"
+          d="M22.5 9c-2.21 0-4 1.79-4 4 0 .89.29 1.71.78 2.38C17.33 16.5 16 18.59 16 21c0 2.03.94 3.84 2.41 5.03-3 1.06-7.41 5.55-7.41 13.47h23c0-7.92-4.41-12.41-7.41-13.47 1.47-1.19 2.41-3 2.41-5.03 0-2.41-1.33-4.5-3.28-5.62.49-.67.78-1.49.78-2.38 0-2.21-1.79-4-4-4z"
+        />
+      </symbol>
+    </svg>
+
+    <div id="menu" class="scr on">
+      <h1>MemeChess</h1>
+      <div class="sub">Get cooked. Get better.</div>
+      <button class="btn p" onclick="show('setup')">♟ Play vs Coach</button>
+      <button class="btn" onclick="openTrain()">🎯 Training</button>
+      <button class="btn" onclick="openSettings()">⚙️ Settings</button>
+      <button class="btn" onclick="prog()">📈 Progress</button>
+    </div>
+
+    <div id="setup" class="scr">
+      <div class="top"><button onclick="show('menu')">←</button>New game</div>
+      <div class="seg" id="side">
+        <button data-v="w" class="on">White</button
+        ><button data-v="r">Random</button><button data-v="b">Black</button>
+      </div>
+      <div class="big" id="elol">Beginner · ELO 800</div>
+      <input
+        type="range"
+        id="elo"
+        min="400"
+        max="2000"
+        step="100"
+        value="800"
+        oninput="eloLab()"
+      />
+      <div class="row">
+        <span>⏱ Timer</span
+        ><input
+          type="checkbox"
+          id="tm"
+          checked
+          onchange="
+            document.getElementById('tmo').style.display = this.checked
+              ? 'block'
+              : 'none'
+          "
+        />
+      </div>
+      <div id="tmo">
+        <div class="row"><span>Minutes</span><b id="mnl">10</b></div>
+        <input
+          type="range"
+          id="mn"
+          min="1"
+          max="60"
+          value="10"
+          oninput="document.getElementById('mnl').textContent = this.value"
+        />
+        <div class="row"><span>Bonus sec/move</span><b id="icl">0</b></div>
+        <input
+          type="range"
+          id="ic"
+          min="0"
+          max="30"
+          value="0"
+          oninput="document.getElementById('icl').textContent = this.value"
+        />
+      </div>
+      <div class="row">
+        <span>↩ Undo moves</span><input type="checkbox" id="un" checked />
+      </div>
+      <div class="row">
+        <span>💡 Move hints</span><input type="checkbox" id="hn" checked />
+      </div>
+      <div class="row">
+        <span>🔈 Coach voice</span><input type="checkbox" id="vo" checked />
+      </div>
+      <button class="btn p" onclick="startGame()">Play</button>
+    </div>
+
+    <div id="settings" class="scr">
+      <div class="top"><button onclick="show('menu')">←</button>Settings</div>
+      <div class="volrow">
+        <label>🎵 Music</label
+        ><input
+          type="range"
+          id="musicvol"
+          min="0"
+          max="100"
+          value="50"
+          oninput="setMusicVol(this.value)"
+        /><span class="volval" id="musicvolval">50</span>
+      </div>
+      <div class="row">
+        <span>🔇 Mute music</span
+        ><input type="checkbox" id="musicmute" onchange="toggleMusicMute()" />
+      </div>
+      <div class="volrow">
+        <label>🔊 SFX</label
+        ><input
+          type="range"
+          id="sfxvol"
+          min="0"
+          max="100"
+          value="70"
+          oninput="setSfxVol(this.value)"
+        /><span class="volval" id="sfxvolval">70</span>
+      </div>
+      <div class="row">
+        <span>🔇 Mute SFX</span
+        ><input type="checkbox" id="sfxmute" onchange="toggleSfxMute()" />
+      </div>
+      <button class="btn" onclick="show('menu')">Done</button>
+    </div>
+
+    <div id="trainmenu" class="scr">
+      <div class="top"><button onclick="show('menu')">←</button>Training</div>
+      <div id="tlist"></div>
+    </div>
+
+    <div id="theme" class="scr">
+      <div class="top"><button onclick="show('menu')">←</button>Board</div>
+      <div class="swatch">
+        <label>Light squares</label
+        ><input type="color" id="c-lt" oninput="applyTheme()" />
+      </div>
+      <div class="swatch">
+        <label>Dark squares</label
+        ><input type="color" id="c-dk" oninput="applyTheme()" />
+      </div>
+      <button class="btn" onclick="resetTheme()">Reset default (purple)</button>
+      <button class="btn p" onclick="show('menu')">Done</button>
+    </div>
+
+    <div id="game" class="scr">
+      <button
+        id="opt"
+        onclick="
+          event.stopPropagation();
+          toggleOpt();
+        "
+      >
+        ⋯
+      </button>
+      <div id="optpanel">
+        <button onclick="flipBoard()">🔄 Flip board</button>
+        <button onclick="restartNow()">🔁 Restart game</button>
+        <button onclick="resign()">⚑ Resign</button>
+        <button onclick="leave()">🏠 Main menu</button>
+      </div>
+      <div class="top"><button onclick="leave()">←</button>MemeChess</div>
+      <div id="tp"></div>
+      <div class="pl">
+        <div id="ev">
+          <div id="evf"></div>
+          <span id="evt">0.00</span>
+        </div>
+      </div>
+      <div id="opname"></div>
+      <div id="coach">
+        <div id="face">
+          <svg viewBox="0 0 100 100" id="face-svg">
+            <rect width="100" height="100" fill="#fff" />
+            <g id="face-head">
+              <path
+                id="browL"
+                d="M24 34 Q32 28 42 32"
+                stroke="#111"
+                stroke-width="6"
+                stroke-linecap="round"
+                fill="none"
+              />
+              <path
+                id="browR"
+                d="M58 32 Q68 28 76 34"
+                stroke="#111"
+                stroke-width="6"
+                stroke-linecap="round"
+                fill="none"
+              />
+              <ellipse id="eyeL" cx="34" cy="50" rx="8" ry="8" fill="#111" />
+              <ellipse id="eyeR" cx="66" cy="50" rx="8" ry="8" fill="#111" />
+              <circle
+                id="pupilL"
+                cx="34"
+                cy="50"
+                r="3.5"
+                fill="#fff"
+                opacity="0"
+              />
+              <circle
+                id="pupilR"
+                cx="66"
+                cy="50"
+                r="3.5"
+                fill="#fff"
+                opacity="0"
+              />
+              <path
+                id="nose"
+                d="M48 58 Q48 70 56 70"
+                stroke="#111"
+                stroke-width="6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                fill="none"
+              />
+              <path
+                id="mouth"
+                d="M40 78 Q50 86 60 78"
+                stroke="#111"
+                stroke-width="6"
+                stroke-linecap="round"
+                fill="none"
+              />
+            </g>
+            <path
+              id="sweat"
+              d="M82 34 Q86 40 84 46 Q80 48 78 44 Q76 38 82 34Z"
+              fill="#7dd3fc"
+              opacity="0"
+            />
+            <circle
+              id="blushL"
+              cx="26"
+              cy="64"
+              r="6"
+              fill="#fda4af"
+              opacity="0"
+            />
+            <circle
+              id="blushR"
+              cx="74"
+              cy="64"
+              r="6"
+              fill="#fda4af"
+              opacity="0"
+            />
+          </svg>
+        </div>
+        <div id="ct">Ready to get cooked?</div>
+      </div>
+      <button id="logbtn" onclick="toggleLog()">▾ history</button>
+      <div id="log"></div>
+      <div class="clk pl"><span id="on">Coach</span><b id="ck1">--</b></div>
+      <div id="bdwrap"><div id="bd"></div></div>
+      <div class="clk pl"><span>You</span><b id="ck0">--</b></div>
+      <div id="ml" class="pl"></div>
+      <div id="chatwrap">
+        <div id="qr">
+          <input
+            id="qi"
+            placeholder="Talk to the coach..."
+            onkeydown="if (event.key === 'Enter') sendQ();"
+          /><button onclick="sendQ()">Send</button>
+        </div>
+      </div>
+      <div id="bar" class="pl">
+        <button onclick="resign()">⚑ Resign</button>
+        <button onclick="hintBtn()">💡 Hint</button>
+        <button onclick="undo()">↩ Undo</button>
+      </div>
+    </div>
+
+    <div id="review" class="scr">
+      <div class="top">
+        <button onclick="closeReview()">←</button>Game Review
+      </div>
+      <div id="rboard">
+        <div id="rbd"></div>
+        <svg id="rarrow" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <marker
+              id="ah"
+              markerWidth="4"
+              markerHeight="4"
+              refX="3"
+              refY="2"
+              orient="auto"
+            >
+              <path d="M0 0 L4 2 L0 4 Z" fill="#22c55e" />
+            </marker>
+          </defs>
+          <line
+            id="rline"
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="0"
+            stroke="#22c55e"
+            stroke-width="1.4"
+            stroke-linecap="round"
+            marker-end="url(#ah)"
+            opacity="0"
+          />
+        </svg>
+      </div>
+      <div id="rnav">
+        <button id="rprev" onclick="rStep(-1)">← Prev</button
+        ><button id="rnext" onclick="rStep(1)">Next →</button>
+      </div>
+      <div id="rcomment"></div>
+    </div>
+
+    <div id="progs" class="scr">
+      <div class="top"><button onclick="show('menu')">←</button>Progress</div>
+      <div id="pg"></div>
+    </div>
+
+    <div id="end" onclick="if (event.target.id === 'end') closeEnd();">
+      <div id="endcard">
+        <div id="endword"></div>
+        <div id="endsub"></div>
+        <div id="endstats"></div>
+        <div id="endbtns">
+          <button class="g" onclick="rematch()">🔁 Play again</button>
+          <button onclick="startReview()">🔍 Review game</button>
+          <button
+            class="sec"
+            onclick="
+              closeEnd();
+              leave();
+            "
+          >
+            🏠 Main menu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="fat"></div>
+
+    <script>
+      const GEMINI_KEY =
+        "AQ.Ab8RN6KaHfKj12x4ppQVUXuFX5pNJll4G5452ck3a5fDx2v7lQ";
+
+      /* ==========================================================
+   SOUND FILE COUNTS — based on what you actually have
+   ========================================================== */
+      const POOL_SIZES = {
+        theme: 20, // you have up to 20
+        move: 20, // try 20; if folder missing it falls back to synth
+        capture: 14, // you have 14
+        check: 11, // you have 11
+        win: 11, // you have 11
+        lose: 10, // you have 10
+      };
+
+      const $ = (s) => document.querySelector(s);
+      const $$ = (s) => document.querySelectorAll(s);
+      const show = (id) =>
+        $$(".scr").forEach((e) => e.classList.toggle("on", e.id === id));
+      const vib = (p) => {
+        try {
+          navigator.vibrate && navigator.vibrate(p);
+        } catch (e) {}
+      };
+      const PIECE_SVG = (t, color) => {
+        const id =
+          (color === "w" ? "white-" : "black-") +
+          {
+            p: "pawn",
+            n: "knight",
+            b: "bishop",
+            r: "rook",
+            q: "queen",
+            k: "king",
+          }[t];
+        return `<svg viewBox="0 0 45 45" preserveAspectRatio="xMidYMid meet"><use href="#${id}"/></svg>`;
+      };
+
+      const S = (() => {
+        try {
+          return JSON.parse(localStorage.getItem("mc") || "{}");
+        } catch (e) {
+          return {};
+        }
+      })();
+      S.iq = S.iq || 800;
+      S.games = S.games || 0;
+      S.weak = S.weak || {};
+      S.training = S.training || {};
+      S.theme = S.theme || { lt: "#7c3aed", dk: "#0a0416" };
+      S.musicVol = S.musicVol !== undefined ? S.musicVol : 0.5;
+      S.sfxVol = S.sfxVol !== undefined ? S.sfxVol : 0.7;
+      S.musicMute = S.musicMute || false;
+      S.sfxMute = S.sfxMute || false;
+      S.journey = S.journey || { level: 0, unlocked: 0, completed: [] };
+      S.eloHistory = S.eloHistory || [];
+      const save = () => {
+        try {
+          localStorage.setItem("mc", JSON.stringify(S));
+          return true;
+        } catch (e) {
+          return false;
+        }
+      };
+
+      /* ============================================================
+   AUDIO SYSTEM
+   ============================================================ */
+
+      let AC = null,
+        sfxGain = null,
+        audioUnlocked = false;
+
+      function ac() {
+        if (!AC) {
+          try {
+            AC = new (window.AudioContext || window.webkitAudioContext)();
+          } catch (e) {
+            AC = null;
+            return null;
+          }
+        }
+        if (AC && AC.state === "suspended") AC.resume().catch(() => {});
+        return AC;
+      }
+
+      function unlockAudio() {
+        try {
+          const c = ac();
+          if (!c) return;
+          if (c.state === "suspended") c.resume().catch(() => {});
+          if (!sfxGain) {
+            sfxGain = c.createGain();
+            sfxGain.gain.value = S.sfxMute ? 0 : S.sfxVol;
+            sfxGain.connect(c.destination);
+          } else if (!S.sfxMute) {
+            sfxGain.gain.value = S.sfxVol;
+          }
+          if (!audioUnlocked) {
+            const buf = c.createBuffer(1, 1, c.sampleRate);
+            const src = c.createBufferSource();
+            src.buffer = buf;
+            src.connect(c.destination);
+            src.start(0);
+            audioUnlocked = true;
+          }
+        } catch (e) {}
+      }
+      ["click", "touchstart", "keydown", "pointerdown"].forEach((evt) => {
+        document.addEventListener(evt, unlockAudio, { passive: true });
+      });
+
+      /* ---------- Music ---------- */
+      let musicEl = null,
+        musicFadeId = null,
+        musicErrStreak = 0;
+      function clearMusicFade() {
+        if (musicFadeId) {
+          clearInterval(musicFadeId);
+          musicFadeId = null;
+        }
+      }
+
+      function fadeMusicTo(target, ms, done) {
+        clearMusicFade();
+        if (!musicEl) {
+          if (done) done();
+          return;
+        }
+        const start = musicEl.volume;
+        const steps = Math.max(1, Math.round(ms / 40));
+        let i = 0;
+        musicFadeId = setInterval(() => {
+          i++;
+          const v = start + (target - start) * (i / steps);
+          if (musicEl) musicEl.volume = Math.max(0, Math.min(1, v));
+          if (i >= steps) {
+            clearMusicFade();
+            if (done) done();
+          }
+        }, 40);
+      }
+
+      function startMenuMusic() {
+        if (S.musicMute) return;
+        if (musicEl && !musicEl.paused) {
+          fadeMusicTo(S.musicVol, 900);
+          return;
+        }
+        const url = nextFromPool("theme");
+        if (!url) return;
+        try {
+          if (musicEl) {
+            try {
+              musicEl.pause();
+            } catch (e) {}
+          }
+          const el = new Audio(url);
+          musicEl = el;
+          el.volume = 0;
+          el.loop = false;
+          el.onended = () => {
+            if (musicEl === el) musicEl = null;
+            startMenuMusic();
+          };
+          el.onerror = () => {
+            if (musicEl === el) musicEl = null;
+            musicErrStreak++;
+            if (musicErrStreak < 6) setTimeout(startMenuMusic, 1500);
+          };
+          el.play()
+            .then(() => {
+              musicErrStreak = 0;
+              fadeMusicTo(S.musicVol, 1400);
+            })
+            .catch(() => {});
+        } catch (e) {}
+      }
+
+      function stopMusicFade(ms) {
+        ms = ms === undefined ? 900 : ms;
+        clearMusicFade();
+        const el = musicEl;
+        if (!el) return;
+        fadeMusicTo(0, ms, () => {
+          try {
+            el.pause();
+          } catch (e) {}
+          if (musicEl === el) musicEl = null;
+        });
+      }
+      function stopMusicNow() {
+        clearMusicFade();
+        if (musicEl) {
+          try {
+            musicEl.pause();
+          } catch (e) {}
+          musicEl = null;
+        }
+      }
+      function setMusicVol(v) {
+        S.musicVol = v / 100;
+        save();
+        if (musicEl && !musicFadeId)
+          musicEl.volume = S.musicMute ? 0 : S.musicVol;
+        const l = $("#musicvolval");
+        if (l) l.textContent = v;
+      }
+      function setSfxVol(v) {
+        S.sfxVol = v / 100;
+        save();
+        if (sfxGain) sfxGain.gain.value = S.sfxMute ? 0 : S.sfxVol;
+        if (curSfxEl) curSfxEl.volume = S.sfxMute ? 0 : S.sfxVol;
+        const l = $("#sfxvolval");
+        if (l) l.textContent = v;
+      }
+      function toggleMusicMute() {
+        S.musicMute = $("#musicmute").checked;
+        save();
+        if (S.musicMute) {
+          stopMusicNow();
+        } else if (!$("#game").classList.contains("on")) {
+          startMenuMusic();
+        }
+      }
+      function toggleSfxMute() {
+        S.sfxMute = $("#sfxmute").checked;
+        save();
+        if (sfxGain) sfxGain.gain.value = S.sfxMute ? 0 : S.sfxVol;
+        if (S.sfxMute) stopSfx();
+        else if (curSfxEl) curSfxEl.volume = S.sfxVol;
+      }
+
+      /* ---------- Sound pools ---------- */
+      const SOUND_POOLS = {};
+      for (const k in POOL_SIZES) {
+        SOUND_POOLS[k] = Array.from(
+          { length: POOL_SIZES[k] },
+          (_, i) => `${k}/${i + 1}.mp3`,
+        );
+      }
+      const poolDecks = {};
+      const poolDead = {}; /* marked true if 3+ files fail to load */
+      const poolFailCount = {};
+
+      function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = (Math.random() * (i + 1)) | 0;
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+      function nextFromPool(name) {
+        if (poolDead[name]) return null;
+        if (!poolDecks[name] || !poolDecks[name].length)
+          poolDecks[name] = shuffle(SOUND_POOLS[name] || []);
+        return poolDecks[name].pop();
+      }
+      function reportPoolFail(name) {
+        poolFailCount[name] = (poolFailCount[name] || 0) + 1;
+        if (poolFailCount[name] >= 3) {
+          poolDead[name] = true;
+          try {
+            console.log(
+              '[audio] Pool "' +
+                name +
+                '" marked dead — using synth fallback from now on.',
+            );
+          } catch (e) {}
+        }
+      }
+
+      /* ---------- Synth (fallback for missing folders) ---------- */
+      const PROFILES = {
+        move: [
+          () => tone(560, 320, 0.09, "sine", 0.32),
+          () => tone(500, 290, 0.09, "sine", 0.32),
+          () => tone(620, 350, 0.08, "triangle", 0.3),
+        ],
+        capture: [
+          () => {
+            tone(240, 80, 0.22, "square", 0.5);
+            noise(0.16, 0.4, 700);
+          },
+          () => {
+            tone(180, 60, 0.26, "square", 0.48);
+            noise(0.14, 0.35, 500);
+          },
+          () => {
+            tone(320, 120, 0.2, "sawtooth", 0.4);
+          },
+        ],
+        check: [
+          () =>
+            [0, 0.14, 0.28].forEach((t) =>
+              tone(780, 730, 0.13, "sawtooth", 0.35, t),
+            ),
+          () =>
+            [0, 0.18].forEach((t) => tone(680, 640, 0.17, "triangle", 0.32, t)),
+          () => {
+            tone(900, 600, 0.18, "square", 0.35);
+            tone(600, 400, 0.18, "square", 0.32, 0.14);
+          },
+        ],
+        win: [
+          () =>
+            [0, 0.1, 0.2, 0.34].forEach((t) =>
+              tone(520 + t * 220, 500, 0.16, "triangle", 0.36, t),
+            ),
+          () =>
+            [523, 659, 784, 1047].forEach((f, i) =>
+              tone(f, f, 0.22, "sine", 0.34, i * 0.11),
+            ),
+        ],
+        lose: [
+          () => {
+            tone(220, 70, 0.55, "sawtooth", 0.44);
+            noise(0.3, 0.4, 450);
+          },
+          () => {
+            tone(180, 60, 0.6, "square", 0.4);
+            tone(120, 50, 0.65, "sawtooth", 0.35, 0.1);
+          },
+        ],
+      };
+      const lastPick = {};
+      function tone(a, b, d, ty = "sine", v = 0.3, t = 0) {
+        try {
+          const c = ac();
+          if (!c) return;
+          const o = c.createOscillator(),
+            n = c.createGain(),
+            s = c.currentTime + t;
+          o.type = ty;
+          o.frequency.setValueAtTime(a, s);
+          o.frequency.exponentialRampToValueAtTime(Math.max(b, 1), s + d);
+          n.gain.setValueAtTime(v, s);
+          n.gain.exponentialRampToValueAtTime(0.001, s + d);
+          o.connect(n).connect(sfxGain || c.destination);
+          o.start(s);
+          o.stop(s + d);
+        } catch (e) {}
+      }
+      function noise(d, v = 0.5, f = 1000) {
+        try {
+          const c = ac();
+          if (!c) return;
+          const b = c.createBuffer(
+              1,
+              Math.max(1, Math.floor(c.sampleRate * d)),
+              c.sampleRate,
+            ),
+            a = b.getChannelData(0);
+          for (let i = 0; i < a.length; i++)
+            a[i] = (Math.random() * 2 - 1) * (1 - i / a.length);
+          const s = c.createBufferSource(),
+            fl = c.createBiquadFilter(),
+            n = c.createGain();
+          fl.frequency.value = f;
+          n.gain.value = v;
+          s.buffer = b;
+          s.connect(fl)
+            .connect(n)
+            .connect(sfxGain || c.destination);
+          s.start();
+        } catch (e) {}
+      }
+      function synth(prof) {
+        const pool = PROFILES[prof] || PROFILES.move;
+        let i,
+          t = 0;
+        do {
+          i = (Math.random() * pool.length) | 0;
+        } while (pool.length > 1 && i === lastPick[prof] && t++ < 8);
+        lastPick[prof] = i;
+        try {
+          pool[i]();
+        } catch (e) {}
+      }
+
+      /* ---------- SFX player (fresh Audio per sound) ---------- */
+      let curSfxEl = null;
+      let synthLoopId = null;
+      let sfxSeq = 0;
+      let firstPlayFailCount = {};
+
+      function stopSfx() {
+        if (synthLoopId) {
+          clearInterval(synthLoopId);
+          synthLoopId = null;
+        }
+        if (curSfxEl) {
+          const a = curSfxEl;
+          curSfxEl = null;
+          try {
+            a.pause();
+            a.currentTime = 0;
+          } catch (e) {}
+        }
+      }
+
+      function playSound(name, loop) {
+        const seq = ++sfxSeq;
+
+        const useSynth = () => {
+          if (seq !== sfxSeq) return; /* superseded */
+          synth(name);
+          if (loop) {
+            synthLoopId = setInterval(() => {
+              if (seq === sfxSeq) synth(name);
+            }, 900);
+          }
+        };
+
+        const url = nextFromPool(name);
+        if (!url) {
+          useSynth();
+          return;
+        }
+
+        let started = false;
+        const a = new Audio();
+        curSfxEl = a;
+        a.volume = S.sfxMute ? 0 : S.sfxVol;
+        a.loop = !!loop;
+        a.preload = "auto";
+        a.src = url;
+
+        a.addEventListener("playing", () => {
+          started = true;
+        });
+        a.addEventListener("error", () => {
+          if (seq !== sfxSeq) return;
+          reportPoolFail(name);
+          useSynth();
+        });
+
+        const p = a.play();
+        if (p && typeof p.catch === "function") {
+          p.catch(() => {
+            if (seq !== sfxSeq) return;
+            reportPoolFail(name);
+            useSynth();
+          });
+        }
+
+        /* If nothing started after 700ms, assume the file is missing. */
+        setTimeout(() => {
+          if (seq !== sfxSeq) return;
+          if (!started) {
+            reportPoolFail(name);
+            useSynth();
+          }
+        }, 700);
+      }
+
+      function sfx(name, loop) {
+        if (S.sfxMute) return;
+        unlockAudio();
+        stopSfx();
+        playSound(name, loop);
+      }
+
+      /* ============================================================
+   FACE ANIMATION
+   ============================================================ */
+      const FACE_TARGETS = {
+        idle: {
+          bL: [24, 34, 32, 28, 42, 32],
+          bR: [58, 32, 68, 28, 76, 34],
+          eR: 8,
+          mouth: "M40 78 Q50 86 60 78",
+          sweat: 0,
+          blush: 0,
+          pupil: 0,
+          gazeX: 0,
+          gazeY: 0,
+        },
+        good: {
+          bL: [24, 30, 32, 24, 42, 28],
+          bR: [58, 28, 68, 24, 76, 30],
+          eR: 9,
+          mouth: "M36 76 Q50 90 64 76",
+          sweat: 0,
+          blush: 0.6,
+          pupil: 0,
+          gazeX: 0,
+          gazeY: -1,
+        },
+        great: {
+          bL: [24, 28, 32, 22, 42, 26],
+          bR: [58, 26, 68, 22, 76, 28],
+          eR: 10,
+          mouth: "M34 74 Q50 92 66 74",
+          sweat: 0,
+          blush: 0.8,
+          pupil: 0,
+          gazeX: 0,
+          gazeY: -2,
+        },
+        blunder: {
+          bL: [24, 36, 32, 40, 42, 42],
+          bR: [58, 42, 68, 40, 76, 36],
+          eR: 7,
+          mouth: "M40 84 Q50 76 60 84",
+          sweat: 1,
+          blush: 0,
+          pupil: 0.6,
+          gazeX: 0,
+          gazeY: 2,
+        },
+        mistake: {
+          bL: [24, 30, 32, 34, 42, 36],
+          bR: [58, 30, 68, 26, 76, 28],
+          eR: 7,
+          mouth: "M40 80 L60 80",
+          sweat: 0.4,
+          blush: 0,
+          pupil: 0.4,
+          gazeX: 2,
+          gazeY: 0,
+        },
+        capture: {
+          bL: [24, 32, 32, 28, 42, 30],
+          bR: [58, 28, 68, 30, 76, 32],
+          eR: 8,
+          mouth: "M38 78 Q50 84 62 74",
+          sweat: 0,
+          blush: 0,
+          pupil: 0,
+          gazeX: 0,
+          gazeY: 0,
+        },
+        check: {
+          bL: [24, 38, 32, 36, 42, 38],
+          bR: [58, 38, 68, 36, 76, 38],
+          eR: 6,
+          mouth: "M42 80 L58 80",
+          sweat: 0,
+          blush: 0,
+          pupil: 0.3,
+          gazeX: 0,
+          gazeY: -2,
+        },
+        panic: {
+          bL: [24, 38, 32, 34, 42, 36],
+          bR: [58, 36, 68, 34, 76, 38],
+          eR: 10,
+          mouth: "M40 82 Q50 74 60 82",
+          sweat: 1,
+          blush: 0,
+          pupil: 0.2,
+          gazeX: 0,
+          gazeY: 0,
+        },
+        promo: {
+          bL: [24, 28, 32, 22, 42, 26],
+          bR: [58, 26, 68, 22, 76, 28],
+          eR: 11,
+          mouth: "M34 74 Q50 92 66 74",
+          sweat: 0,
+          blush: 1,
+          pupil: 0,
+          gazeX: 0,
+          gazeY: -2,
+        },
+        win: {
+          bL: [24, 30, 32, 24, 42, 28],
+          bR: [58, 28, 68, 24, 76, 30],
+          eR: 9,
+          mouth: "M36 76 Q50 90 64 76",
+          sweat: 0,
+          blush: 0.5,
+          pupil: 0,
+          gazeX: 0,
+          gazeY: 0,
+        },
+        lose: {
+          bL: [24, 38, 32, 42, 42, 42],
+          bR: [58, 42, 68, 42, 76, 38],
+          eR: 6,
+          mouth: "M40 84 L60 84",
+          sweat: 0.5,
+          blush: 0,
+          pupil: 0.8,
+          gazeX: -2,
+          gazeY: 2,
+        },
+      };
+      const faceState = {
+        key: "idle",
+        t: 0,
+        blink: 0,
+        talking: 0,
+        bob: 0,
+        lookTimer: 0,
+      };
+      let faceRAF = null,
+        faceLast = performance.now();
+      function setFace(k) {
+        faceState.key = FACE_TARGETS[k] ? k : "idle";
+      }
+      function faceTick(now) {
+        const dt = Math.min((now - faceLast) / 1000, 0.05);
+        faceLast = now;
+        faceState.t += dt;
+        faceState.talking = Math.max(0, faceState.talking - dt);
+        faceState.bob =
+          Math.sin(faceState.t * 2.2) * (faceState.talking > 0 ? 2.4 : 0.7);
+        faceState.blink += dt;
+        if (faceState.blink > 3.5) faceState.blink = 0;
+        faceState.lookTimer += dt;
+        let lookX = 0;
+        if (faceState.lookTimer > 5) {
+          if (faceState.lookTimer < 5.6)
+            lookX = Math.sin(((faceState.lookTimer - 5) * Math.PI) / 0.6) * 5;
+          else faceState.lookTimer = 0;
+        }
+        const bL = $("#browL"),
+          bR = $("#browR"),
+          eL = $("#eyeL"),
+          eR = $("#eyeR"),
+          pL = $("#pupilL"),
+          pR = $("#pupilR"),
+          mouth = $("#mouth"),
+          sw = $("#sweat"),
+          blL = $("#blushL"),
+          blR = $("#blushR"),
+          head = $("#face-head");
+        if (bL) {
+          const T = FACE_TARGETS[faceState.key] || FACE_TARGETS.idle;
+          const bob = faceState.bob;
+          bL.setAttribute(
+            "d",
+            `M${T.bL[0]} ${T.bL[1] + bob} Q${T.bL[2]} ${T.bL[3] + bob} ${T.bL[4]} ${T.bL[5] + bob}`,
+          );
+          bR.setAttribute(
+            "d",
+            `M${T.bR[0]} ${T.bR[1] + bob} Q${T.bR[2]} ${T.bR[3] + bob} ${T.bR[4]} ${T.bR[5] + bob}`,
+          );
+          mouth.setAttribute("d", T.mouth);
+          mouth.setAttribute("transform", `translate(0 ${bob})`);
+          const blinking = faceState.blink > 3.35;
+          const eyeScale = blinking
+            ? 0.15
+            : 1 + Math.sin(faceState.t * 1.7) * 0.05;
+          const gazeX = (T.gazeX || 0) + lookX;
+          const gazeY = (T.gazeY || 0) + bob * 0.5;
+          eL.setAttribute("ry", T.eR * eyeScale);
+          eR.setAttribute("ry", T.eR * eyeScale);
+          eL.setAttribute("cx", 34 + gazeX * 0.3);
+          eR.setAttribute("cx", 66 + gazeX * 0.3);
+          eL.setAttribute("cy", 50 + bob + gazeY * 0.3);
+          eR.setAttribute("cy", 50 + bob + gazeY * 0.3);
+          pL.setAttribute("opacity", T.pupil);
+          pR.setAttribute("opacity", T.pupil);
+          pL.setAttribute("cx", 34 + gazeX * 0.3);
+          pR.setAttribute("cx", 66 + gazeX * 0.3);
+          pL.setAttribute("cy", 50 + bob + gazeY * 0.3);
+          pR.setAttribute("cy", 50 + bob + gazeY * 0.3);
+          sw.setAttribute(
+            "opacity",
+            T.sweat * (0.6 + 0.4 * Math.sin(faceState.t * 3)),
+          );
+          blL.setAttribute("opacity", T.blush);
+          blR.setAttribute("opacity", T.blush);
+          const tilt = Math.sin(faceState.t * 0.8) * 1.5;
+          head.setAttribute("transform", `rotate(${tilt} 50 50)`);
+        }
+        faceRAF = requestAnimationFrame(faceTick);
+      }
+      function startFaceLoop() {
+        if (faceRAF) return;
+        faceLast = performance.now();
+        faceRAF = requestAnimationFrame(faceTick);
+      }
+      function facePulse() {
+        faceState.talking = 1.2;
+      }
+      startFaceLoop();
+
+      const OPENING_DB = {
+        e4: "King's Pawn Opening",
+        "e4 e5": "Open Game",
+        "e4 e5 Nf3": "King's Knight Opening",
+        "e4 e5 Nf3 Nc6": "King's Knight",
+        "e4 e5 Nf3 Nc6 Bb5": "Ruy Lopez",
+        "e4 e5 Nf3 Nc6 Bb5 a6": "Ruy Lopez: Morphy Defence",
+        "e4 e5 Nf3 Nc6 Bb5 Nf6": "Ruy Lopez: Berlin Defence",
+        "e4 e5 Nf3 Nc6 Bc4": "Italian Game",
+        "e4 e5 Nf3 Nc6 Bc4 Bc5": "Italian: Giuoco Piano",
+        "e4 e5 Nf3 Nc6 Bc4 Nf6": "Italian: Two Knights Defence",
+        "e4 e5 Nf3 Nc6 d4": "Scotch Game",
+        "e4 e5 Nf3 Nf6": "Petrov Defence",
+        "e4 e5 f4": "King's Gambit",
+        "e4 c5": "Sicilian Defence",
+        "e4 e6": "French Defence",
+        "e4 c6": "Caro-Kann Defence",
+        "e4 d5": "Scandinavian Defence",
+        "e4 Nf6": "Alekhine Defence",
+        "e4 d6": "Pirc Defence",
+        "e4 g6": "Modern Defence",
+        d4: "Queen's Pawn Opening",
+        "d4 d5": "Queen's Pawn Game",
+        "d4 d5 c4": "Queen's Gambit",
+        "d4 d5 c4 e6": "Queen's Gambit Declined",
+        "d4 d5 c4 c6": "Slav Defence",
+        "d4 d5 c4 dxc4": "Queen's Gambit Accepted",
+        "d4 d5 Bf4": "London System",
+        "d4 Nf6": "Indian Defence",
+        "d4 Nf6 c4 e6": "East Indian Defence",
+        "d4 Nf6 c4 g6": "King's Indian Defence",
+        "d4 Nf6 c4 g6 Nc3 d5": "Grünfeld Defence",
+        "d4 f5": "Dutch Defence",
+        c4: "English Opening",
+        Nf3: "Réti Opening",
+      };
+      function lookupOpening(hist) {
+        if (!hist.length) return null;
+        for (let len = hist.length; len >= 1; len--) {
+          const seq = hist
+            .slice(0, len)
+            .map((s) => s.replace(/[+#?!]/g, ""))
+            .join(" ");
+          if (OPENING_DB[seq]) return { name: OPENING_DB[seq], depth: len };
+        }
+        return null;
+      }
+
+      function deck(arr) {
+        const c = [...arr];
+        return () => {
+          if (!c.length) {
+            c.push(...arr);
+            for (let i = c.length - 1; i > 0; i--) {
+              const j = (Math.random() * (i + 1)) | 0;
+              [c[i], c[j]] = [c[j], c[i]];
+            }
+          }
+          return c.pop();
+        };
+      }
+      const R = {
+        blunder: deck([
+          "Bro hung that piece like laundry.",
+          "That move? Cooked.",
+          "Aura -500.",
+          "Even Stockfish facepalmed.",
+          "Send that move to the shadow realm.",
+          "Your pieces are filing for divorce.",
+          "You gave it away for FREE.",
+        ]),
+        mistake: deck([
+          "Hmm. Not your best.",
+          "Bold strategy.",
+          "Close but no. Think deeper.",
+          "Almost cooking. Almost.",
+          "Small leak. Plug it.",
+          "Nah, that ain't it.",
+        ]),
+        good: deck([
+          "Okay okay, cooking now.",
+          "Sheesh.",
+          "Clean. That's the stuff.",
+          "W move.",
+          "Solid. Keep it up.",
+          "Now THAT's chess.",
+        ]),
+        great: deck([
+          "BRILLIANT.",
+          "That was actually insane.",
+          "Top move. You saw it.",
+          "Chef's kiss.",
+          "You cooked with that one.",
+        ]),
+        capture: deck([
+          "Loot acquired.",
+          "Free real estate.",
+          "Yoink.",
+          "One less problem.",
+          "Snatched.",
+          "Sit down.",
+        ]),
+        check: deck([
+          "Your king is sweating.",
+          "Check. Run, bro.",
+          "King in shambles.",
+          "He's in trouble now.",
+        ]),
+        myCheck: deck([
+          "Wait — my king's in trouble!",
+          "My king is under fire!",
+          "Whoa, I need to defend my king.",
+        ]),
+        promo: deck([
+          "A pawn became a QUEEN.",
+          "Promotion. That pawn said 'I'm him'.",
+        ]),
+        question: deck([
+          "Look for undefended pieces first.",
+          "What's my opponent threatening?",
+          "Count attackers vs defenders.",
+          "Scan every check, capture, and threat.",
+        ]),
+        bookPraise: deck([
+          "Book move. Theory-approved.",
+          "Textbook. Keep going.",
+          "You're playing the main line.",
+        ]),
+        bookIntro: deck([
+          "That's {OP}. Standard stuff.",
+          "{OP} — nice choice.",
+          "We're in the {OP} now.",
+          "Welcome to the {OP}.",
+        ]),
+        offBook: deck([
+          "Off-book now. Stay sharp.",
+          "Leaving theory. Your call.",
+          "Theory ends here. Think for yourself.",
+        ]),
+        openingTeach: deck([
+          "In the {OP}, control the centre and develop pieces.",
+          "{OP} — fight for the centre, castle early.",
+          "{OP}: get your pieces out, connect rooks, then plan.",
+        ]),
+      };
+      const AV = {
+        blunder: "blunder",
+        mistake: "mistake",
+        good: "good",
+        great: "great",
+        capture: "capture",
+        check: "check",
+        promo: "promo",
+        win: "win",
+        lose: "lose",
+        draw: "idle",
+      };
+      const END_WIN = deck([
+        "DAMMMM you ate that",
+        "Badass player",
+        "Smooth criminal",
+        "GG no re",
+        "You cooked. Plate it up.",
+      ]);
+      const END_LOSE = deck([
+        "Nahh you still a baby player",
+        "My grandma plays better",
+        "Cooked. Absolutely cooked.",
+        "Bro got humbled",
+      ]);
+      const END_DRAW = deck([
+        "Nobody cooked. Boring.",
+        "Dead even.",
+        "Draw. Somebody's stalling.",
+      ]);
+
+      function detectPattern(prevFen, newFen, mv, color) {
+        const after = new Chess(newFen);
+        const board = after.board();
+        let oppColor = color === "w" ? "b" : "w";
+        let hanging = [];
+        for (let r = 0; r < 8; r++)
+          for (let c = 0; c < 8; c++) {
+            const p2 = board[r][c];
+            if (!p2 || p2.color !== oppColor) continue;
+            const sq = "abcdefgh"[c] + (8 - r);
+            const attackers = after
+              .moves({ verbose: true })
+              .filter((m) => m.to === sq && m.color === color).length;
+            const defenders = after
+              .moves({ verbose: true })
+              .filter((m) => m.to === sq && m.color === oppColor).length;
+            if (attackers > defenders && p2.type !== "k")
+              hanging.push(sq + ":" + p2.type);
+          }
+        return { hanging, isCap: !!mv.captured, isCheck: after.in_check() };
+      }
+
+      function gameContext() {
+        try {
+          const turn = g.turn() === "w" ? "white" : "black";
+          const myColor = me === "w" ? "white" : "black";
+          const myTurn = turn === myColor;
+          const inCheck = g.in_check();
+          return {
+            myColor,
+            whoseTurn: turn,
+            myTurn,
+            myKingInCheck: myTurn && inCheck,
+            yourKingInCheck: !myTurn && inCheck,
+            lastMoves: g.history().slice(-10),
+            opening: currentOpeningName,
+            materialLead: Math.round((me === "w" ? ev(g) : -ev(g)) / 100),
+          };
+        } catch (e) {
+          return {};
+        }
+      }
+      async function ask(evt, q, extra) {
+        const key = (typeof GEMINI_KEY === "string" ? GEMINI_KEY : "").trim();
+        if (!key) return null;
+        try {
+          const payload = {
+            event: evt,
+            question: q || "",
+            extra: extra || "",
+            context: gameContext(),
+            fen: g.fen(),
+          };
+          const sys = `You are Coach Rizz — a funny chess coach PLAYING against the user. Reply in 1-2 short sentences, casual internet slang.
+- If context.myKingInCheck, YOUR OWN king is in check — panic.
+- If context.yourKingInCheck, the USER's king is in check — roast them.
+- If context.opening is set, reference it and teach something.
+- Name tactics (fork, pin, skewer, hanging piece).
+- Never repeat the same phrase twice.`;
+          const ctrl = new AbortController();
+          const to = setTimeout(() => ctrl.abort(), 8000);
+          const r = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                systemInstruction: { parts: [{ text: sys }] },
+                contents: [
+                  { role: "user", parts: [{ text: JSON.stringify(payload) }] },
+                ],
+                generationConfig: { maxOutputTokens: 200, temperature: 1.15 },
+              }),
+              signal: ctrl.signal,
+            },
+          );
+          clearTimeout(to);
+          const raw = await r.text();
+          if (!r.ok) return null;
+          let d;
+          try {
+            d = JSON.parse(raw);
+          } catch (e) {
+            return null;
+          }
+          return (
+            (d.candidates?.[0]?.content?.parts || [])
+              .map((p) => p.text)
+              .filter(Boolean)
+              .join(" ")
+              .trim() || null
+          );
+        } catch (e) {
+          return null;
+        }
+      }
+
+      let chatHistory = [];
+      function chat(t, c) {
+        chatHistory.push({ t, c });
+        if (chatHistory.length > 80) chatHistory.shift();
+        renderLog();
+      }
+      function renderLog() {
+        const L = $("#log");
+        if (L)
+          L.innerHTML = chatHistory
+            .map((x) => `<div class="${x.c}">${escapeHtml(x.t)}</div>`)
+            .join("");
+      }
+      function escapeHtml(s) {
+        return String(s).replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[m],
+        );
+      }
+      function toggleLog() {
+        const L = $("#log");
+        L.classList.toggle("open");
+        $("#logbtn").textContent =
+          (L.classList.contains("open") ? "▴" : "▾") + " history";
+      }
+      function out(t, k) {
+        const ct = $("#ct");
+        ct.textContent = t;
+        ct.classList.remove("flash");
+        void ct.offsetWidth;
+        ct.classList.add("flash");
+        setFace(AV[k] || "idle");
+        facePulse();
+        chat(t, "c");
+        speak(t);
+      }
+      async function say(k, q, extra) {
+        const fb = q ? R.question() : R[k] ? R[k]() : "";
+        const t = await ask(k, q, extra);
+        out((t || fb || "").trim(), k);
+      }
+      function cs(t) {
+        const ct = $("#ct");
+        ct.textContent = t;
+        ct.classList.remove("flash");
+        void ct.offsetWidth;
+        ct.classList.add("flash");
+      }
+      async function sendQ() {
+        const v = $("#qi").value.trim();
+        if (!v) return;
+        $("#qi").value = "";
+        chat(v, "u");
+        const t = await ask("question", v);
+        if (t) {
+          out(t, "good");
+          return;
+        }
+        out(R.question(), "good");
+      }
+
+      const V = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+      function ev(c) {
+        let s = 0;
+        const b = c.board();
+        for (let i = 0; i < 8; i++)
+          for (let j = 0; j < 8; j++) {
+            const p = b[i][j];
+            if (!p) continue;
+            let v =
+              V[p.type] +
+              (7 - Math.abs(i - 3.5) - Math.abs(j - 3.5)) *
+                (p.type === "p" || p.type === "n" ? 4 : 1);
+            s += p.color === "w" ? v : -v;
+          }
+        return s;
+      }
+      function nm(c, d, a, b) {
+        if (c.in_checkmate()) return c.turn() === "w" ? -99999 - d : 99999 + d;
+        if (c.game_over()) return 0;
+        if (d === 0) return ev(c);
+        const w = c.turn() === "w",
+          ms = c
+            .moves({ verbose: true })
+            .sort(
+              (x, y) =>
+                (y.captured ? V[y.captured] : 0) -
+                (x.captured ? V[x.captured] : 0),
+            );
+        let best = w ? -1e9 : 1e9;
+        for (const m of ms) {
+          c.move(m);
+          const s = nm(c, d - 1, a, b);
+          c.undo();
+          if (w) {
+            best = Math.max(best, s);
+            a = Math.max(a, s);
+          } else {
+            best = Math.min(best, s);
+            b = Math.min(b, s);
+          }
+          if (b <= a) break;
+        }
+        return best;
+      }
+      function pick(c, d, nz = 0) {
+        const w = c.turn() === "w";
+        let best = null,
+          bs = w ? -1e9 : 1e9;
+        for (const m of c.moves({ verbose: true })) {
+          c.move(m);
+          const s = nm(c, d - 1, -1e9, 1e9) + (Math.random() - 0.5) * nz;
+          c.undo();
+          if (w ? s > bs : s < bs) {
+            bs = s;
+            best = m;
+          }
+        }
+        return { m: best, s: bs };
+      }
+      const lvl = (e) =>
+        e < 700
+          ? { d: 1, n: 500 }
+          : e < 1000
+            ? { d: 1, n: 250 }
+            : e < 1300
+              ? { d: 2, n: 200 }
+              : e < 1600
+                ? { d: 2, n: 60 }
+                : e < 1900
+                  ? { d: 3, n: 15 }
+                  : { d: 3, n: 0 };
+      const eloName = (e) =>
+        e < 700
+          ? "Newbie"
+          : e < 1000
+            ? "Beginner"
+            : e < 1300
+              ? "Casual"
+              : e < 1600
+                ? "Club player"
+                : e < 1900
+                  ? "Strong"
+                  : "Hard";
+      function eloLab() {
+        const e = +$("#elo").value;
+        $("#elol").textContent = eloName(e) + " · ELO " + e;
+      }
+      $$("#side button").forEach(
+        (b) =>
+          (b.onclick = () => {
+            $$("#side button").forEach((x) => x.classList.remove("on"));
+            b.classList.add("on");
+          }),
+      );
+
+      let g = new Chess(),
+        sel = null,
+        tgt = [],
+        last = null,
+        hint = null,
+        flash = {},
+        hist = [],
+        tags = {},
+        over = false,
+        busy = false,
+        mode = "play",
+        fl = false,
+        me = "w",
+        cfg = {},
+        clk = [0, 0],
+        tmr,
+        streak = 0,
+        tsq = "",
+        mi = 0,
+        gameMoves = [];
+      let currentOpeningName = null,
+        currentOpeningDepth = 0;
+      let qualityBadgeOn = null,
+        qualityBadgeText = null;
+      let savedSettings = null;
+      window._pieceTarget = null;
+      window._atkTarget = null;
+      window._promo = null;
+
+      function kingsSq(c, color) {
+        const bd = c.board();
+        for (let r = 0; r < 8; r++)
+          for (let col = 0; col < 8; col++) {
+            const p = bd[r][col];
+            if (p && p.type === "k" && p.color === color)
+              return "abcdefgh"[col] + (8 - r);
+          }
+        return null;
+      }
+
+      function render() {
+        const B = $("#bd");
+        if (!B) return;
+        B.innerHTML = "";
+        const bd = g.board();
+        const t = S.theme;
+        let checkSquare = null;
+        if (g.in_check() && !g.game_over()) checkSquare = kingsSq(g, g.turn());
+        for (let r = 0; r < 8; r++)
+          for (let c = 0; c < 8; c++) {
+            const i = fl ? 7 - r : r,
+              j = fl ? 7 - c : c,
+              n = "abcdefgh"[j] + (8 - i),
+              p = bd[i][j];
+            const d = document.createElement("div");
+            const dark = (i + j) % 2;
+            d.className =
+              "sq " +
+              (dark ? "dk" : "lt") +
+              (sel === n ? " sel" : "") +
+              (last && last.includes(n) ? " lm" : "") +
+              (hint && hint.includes(n) ? " ht" : "") +
+              (flash[n] === "blunder" ? " blunder" : "") +
+              (checkSquare === n ? " incheck" : "");
+            d.style.background = dark ? t.dk : t.lt;
+            if (p) d.innerHTML = PIECE_SVG(p.type, p.color);
+            if (checkSquare === n) {
+              const b = document.createElement("span");
+              b.className = "checkbadge";
+              b.textContent = "CHECK";
+              d.appendChild(b);
+            }
+            if (qualityBadgeOn === n && qualityBadgeText) {
+              const q = document.createElement("span");
+              q.className = "qbadge q-" + qualityBadgeText;
+              q.textContent =
+                qualityBadgeText === "blunder"
+                  ? "??"
+                  : qualityBadgeText === "mistake"
+                    ? "?"
+                    : qualityBadgeText === "inacc"
+                      ? "?!"
+                      : qualityBadgeText === "good"
+                        ? "!"
+                        : "!!";
+              d.appendChild(q);
+            }
+            if (flash[n] === "blunder") {
+              const b = document.createElement("span");
+              b.className = "badge";
+              b.textContent = "??";
+              d.appendChild(b);
+            }
+            if (tgt.includes(n) && !p) {
+              const dot = document.createElement("span");
+              dot.className = "mvdot";
+              d.appendChild(dot);
+            }
+            if (tgt.includes(n) && p) d.classList.add("cap");
+            if (mode !== "sq" && mode !== "pieces") {
+              if (c === 0) d.dataset.r = 8 - i;
+              if (r === 7) d.dataset.f = "abcdefgh"[j];
+            }
+            d.onclick = () => tap(n);
+            B.appendChild(d);
+          }
+        if (mode === "play" && $("#evf")) {
+          const e = Math.max(-8, Math.min(8, ev(g) / 100));
+          $("#evf").style.width = 50 + e * 6.25 + "%";
+          $("#evt").textContent = (e > 0 ? "+" : "") + e.toFixed(2);
+          const ml = $("#ml");
+          if (ml)
+            ml.innerHTML = g
+              .history()
+              .map(
+                (s, k) =>
+                  '<span class="' +
+                  (tags[k] === "??" ? "q" : "") +
+                  '">' +
+                  (k % 2 ? "" : ((k / 2 + 1) | 0) + ". ") +
+                  s +
+                  (tags[k] || "") +
+                  "</span>",
+              )
+              .join("");
+          if (ml) ml.scrollLeft = 1e5;
+        }
+      }
+      function shake(c) {
+        const B = $("#bd");
+        if (!B) return;
+        B.classList.remove("sh", "bg");
+        void B.offsetWidth;
+        B.classList.add(c);
+      }
+      function fx(m) {
+        last = [m.from, m.to];
+        hint = null;
+        if (m.captured) {
+          sfx("capture");
+          vib(m.captured === "q" ? [80, 40, 120] : [50, 30, 50]);
+          shake(m.captured === "q" ? "bg" : "sh");
+        } else {
+          sfx("move");
+          vib(15);
+        }
+        if (m.promotion) {
+          setTimeout(() => sfx("win"), 150);
+          say("promo");
+        }
+        if (g.in_check() && !g.in_checkmate())
+          setTimeout(() => sfx("check"), 280);
+      }
+      function updateOpeningBanner() {
+        const el = $("#opname");
+        if (mode !== "play" || !currentOpeningName) {
+          el.className = "";
+          return;
+        }
+        el.className = "on";
+        el.innerHTML = `<span class="icon">📖</span>${currentOpeningName}`;
+      }
+      function refreshOpeningName() {
+        const h = g.history();
+        const found = lookupOpening(h);
+        if (found) {
+          currentOpeningName = found.name;
+          currentOpeningDepth = found.depth;
+          updateOpeningBanner();
+          return true;
+        }
+        if (currentOpeningName) updateOpeningBanner();
+        return false;
+      }
+
+      function askPromotion(from, to) {
+        const color = g.get(from).color;
+        const existing = document.getElementById("promo-overlay");
+        if (existing) existing.remove();
+        const overlay = document.createElement("div");
+        overlay.id = "promo-overlay";
+        overlay.style.cssText =
+          "position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:20px";
+        const box = document.createElement("div");
+        box.style.cssText =
+          "background:#1a1226;border-radius:16px;padding:18px;text-align:center;max-width:340px;width:100%";
+        box.innerHTML =
+          '<div style="font-weight:800;margin-bottom:12px;font-size:16px;color:#f2f2f2">Promote to:</div>';
+        const row = document.createElement("div");
+        row.style.cssText =
+          "display:grid;grid-template-columns:repeat(2,1fr);gap:10px";
+        ["q", "r", "b", "n"].forEach((t) => {
+          const btn = document.createElement("button");
+          btn.style.cssText =
+            "background:#241a33;border:0;border-radius:12px;padding:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;font-weight:700;font-size:14px";
+          btn.innerHTML =
+            PIECE_SVG(t, color) +
+            "<span>" +
+            { q: "Queen", r: "Rook", b: "Bishop", n: "Knight" }[t] +
+            "</span>";
+          btn.onclick = () => {
+            overlay.remove();
+            sel = null;
+            tgt = [];
+            window._promo = t;
+            mv(from, to);
+          };
+          row.appendChild(btn);
+        });
+        box.appendChild(row);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+      }
+
+      function restartNow() {
+        if (!savedSettings) {
+          show("setup");
+          return;
+        }
+        startGameFromSettings(savedSettings);
+      }
+      function startGameFromSettings(s) {
+        cfg = { ...s };
+        fl = cfg.side === "b" || (cfg.side === "r" && Math.random() < 0.5);
+        me = fl ? "b" : "w";
+        mode = "play";
+        g = new Chess();
+        hist = [];
+        tags = {};
+        sel = null;
+        tgt = [];
+        last = null;
+        hint = null;
+        over = false;
+        busy = false;
+        chatHistory = [];
+        flash = {};
+        gameMoves = [];
+        window._promo = null;
+        qualityBadgeOn = null;
+        qualityBadgeText = null;
+        currentOpeningName = null;
+        currentOpeningDepth = 0;
+        clk = [cfg.min * 60, cfg.min * 60];
+        $("#game").classList.remove("tr");
+        $("#end").className = "";
+        $("#fat").className = "";
+        $("#opname").className = "";
+        $("#on").textContent = "Coach (" + cfg.elo + ")";
+        $$(".clk b").forEach(
+          (e) => (e.style.display = cfg.timer ? "" : "none"),
+        );
+        $("#bar button:nth-child(2)").style.display = cfg.hints ? "" : "none";
+        $("#bar button:nth-child(3)").style.display = cfg.undo ? "" : "none";
+        show("game");
+        clearInterval(tmr);
+        tmr = setInterval(tick, 1000);
+        render();
+        clocks();
+        setFace("idle");
+        cs(
+          eloName(cfg.elo) + " mode. " + (fl ? "I move first." : "Your move."),
+        );
+        unlockAudio();
+        stopSfx();
+        stopMusicFade(900);
+        if (fl) {
+          busy = true;
+          setTimeout(bot, 700);
+        }
+      }
+      function startGame() {
+        unlockAudio();
+        const sd = document.querySelector("#side .on").dataset.v;
+        cfg = {
+          elo: +$("#elo").value,
+          timer: $("#tm").checked,
+          min: +$("#mn").value,
+          inc: +$("#ic").value,
+          undo: $("#un").checked,
+          hints: $("#hn").checked,
+          side: sd,
+        };
+        savedSettings = { ...cfg };
+        /* NOTE: no Restart Game button shown on the menu */
+        startGameFromSettings(cfg);
+      }
+      const fmt = (s) =>
+        ((s / 60) | 0) + ":" + ("0" + ((s % 60) | 0)).slice(-2);
+      function clocks() {
+        $("#ck0").textContent = fmt(clk[0]);
+        $("#ck1").textContent = fmt(clk[1]);
+      }
+      function tick() {
+        if (mode !== "play" || over || !cfg.timer) return;
+        const k = g.turn() === me ? 0 : 1;
+        clk[k]--;
+        clocks();
+        if (clk[k] <= 0) {
+          over = true;
+          say(k === 0 ? "lose" : "win");
+          fin(k === 0 ? -1 : 1);
+          showEnd(k === 0 ? -1 : 1, "Time");
+        }
+      }
+
+      function tap(n) {
+        unlockAudio();
+        if (mode === "sq") {
+          trainSq(n);
+          return;
+        }
+        if (mode === "pieces") {
+          trainPiece(n);
+          return;
+        }
+        if (mode === "atk") {
+          trainAtk(n);
+          return;
+        }
+        if (mode === "mate") {
+          if (sel && tgt.includes(n)) {
+            trainMate(sel, n);
+            return;
+          }
+          const p = g.get(n);
+          if (p && p.color === "w") {
+            sel = n;
+            tgt = g.moves({ square: n, verbose: true }).map((m) => m.to);
+          } else {
+            sel = null;
+            tgt = [];
+          }
+          render();
+          return;
+        }
+        if (over || busy || g.turn() !== me) return;
+        if (sel && tgt.includes(n)) {
+          const piece = g.get(sel);
+          const toRank = +n[1];
+          if (
+            piece &&
+            piece.type === "p" &&
+            ((piece.color === "w" && toRank === 8) ||
+              (piece.color === "b" && toRank === 1))
+          ) {
+            askPromotion(sel, n);
+            return;
+          }
+          mv(sel, n);
+          return;
+        }
+        const p = g.get(n);
+        if (p && p.color === me) {
+          sel = n;
+          tgt = g.moves({ square: n, verbose: true }).map((m) => m.to);
+        } else {
+          sel = null;
+          tgt = [];
+        }
+        render();
+      }
+      function mv(f, t) {
+        const f0 = g.fen();
+        sel = null;
+        tgt = [];
+        hint = null;
+        const pre = pick(new Chess(f0), 2);
+        const promoPiece = window._promo || "q";
+        window._promo = null;
+        const m = g.move({ from: f, to: t, promotion: promoPiece });
+        if (!m) return;
+        const s = nm(g, 2, -1e9, 1e9),
+          loss = Math.max(0, me === "w" ? pre.s - s : s - pre.s),
+          k = g.history().length - 1;
+        hist.push({ san: m.san, best: pre.m ? pre.m.san : "", loss, n: k + 1 });
+        gameMoves.push({
+          san: m.san,
+          loss,
+          fenBefore: f0,
+          fenAfter: g.fen(),
+          from: f,
+          to: t,
+          captured: m.captured || null,
+          best: pre.m ? pre.m.san : "",
+          by: "user",
+        });
+
+        const hist2 = g.history();
+        const beforeName = currentOpeningName;
+        const found = refreshOpeningName();
+        const isOpening = hist2.length <= 12;
+        const wasBook = !!found;
+
+        let tag = "",
+          badge = null;
+        if (isOpening && wasBook) {
+          tag = "";
+          badge = "good";
+        } else if (isOpening && !wasBook) {
+          if (loss > 300) {
+            tag = "??";
+            badge = "blunder";
+          } else if (loss > 200) {
+            tag = "?";
+            badge = "mistake";
+          } else {
+            tag = "";
+            badge = null;
+          }
+        } else {
+          if (loss > 250) {
+            tag = "??";
+            badge = "blunder";
+          } else if (loss > 120) {
+            tag = "?";
+            badge = "mistake";
+          } else if (loss > 50) {
+            tag = "?!";
+            badge = "inacc";
+          } else if (loss <= 5 && m.captured) {
+            tag = "!";
+            badge = "best";
+          } else if (loss <= 5) {
+            tag = "";
+            badge = "best";
+          } else {
+            tag = "";
+            badge = "good";
+          }
+        }
+        tags[k] = tag;
+        qualityBadgeOn = m.to;
+        qualityBadgeText = badge;
+
+        clk[0] += cfg.inc;
+        clocks();
+        fx(m);
+        render();
+        if (loss > 250 && !isOpening) flashOnce(m.to, "blunder");
+        if (endCheck()) return;
+
+        const pattern = detectPattern(f0, g.fen(), m, me);
+        const extra = [];
+        if (pattern.hanging.length)
+          extra.push(
+            "You left enemy pieces hanging: " + pattern.hanging.join(", "),
+          );
+        if (pattern.isCap) extra.push("You captured on " + m.to);
+        if (pattern.isCheck) extra.push("You gave check");
+        if (wasBook)
+          extra.push("This was a book move of " + currentOpeningName);
+        else if (isOpening && currentOpeningName)
+          extra.push("Off-book. We were in " + currentOpeningName);
+        const extraStr = extra.join(". ");
+
+        (async () => {
+          const ctx = gameContext();
+          if (ctx.myKingInCheck) {
+            setFace("panic");
+            facePulse();
+            const t = await ask("check", null, "Your OWN king is in check.");
+            out((t || R.myCheck()).trim(), "check");
+            return;
+          }
+          if (ctx.yourKingInCheck) {
+            setFace("check");
+            facePulse();
+            const t = await ask("check", null, "User king in check.");
+            out((t || R.check()).trim(), "check");
+            return;
+          }
+          if (wasBook && isOpening) {
+            const isNewName = beforeName !== currentOpeningName;
+            setFace("good");
+            facePulse();
+            if (isNewName) {
+              const t = await ask(
+                "good",
+                null,
+                "Book move. New opening: " + currentOpeningName,
+              );
+              const fb = R.bookIntro().replace("{OP}", currentOpeningName);
+              out((t || fb).trim(), "good");
+              setTimeout(() => {
+                const teach = R.openingTeach().replace(
+                  "{OP}",
+                  currentOpeningName,
+                );
+                cs(teach);
+              }, 2500);
+            } else if (Math.random() < 0.4) {
+              const t = await ask(
+                "good",
+                null,
+                "Book move in " + currentOpeningName,
+              );
+              out((t || R.bookPraise()).trim(), "good");
+            }
+            return;
+          }
+          if (isOpening && !wasBook && currentOpeningName) {
+            const t = await ask(
+              "idle",
+              null,
+              "Off-book. Was in " + currentOpeningName,
+            );
+            out((t || R.offBook()).trim(), "mistake");
+            return;
+          }
+          if (loss > 250) {
+            say("blunder", null, extraStr);
+            vib([100, 50, 100]);
+            return;
+          }
+          if (loss > 120) {
+            say("mistake", null, extraStr);
+            return;
+          }
+          if (tag === "!") {
+            say("great", null, extraStr);
+            return;
+          }
+          if (m.captured && Math.random() < 0.3) {
+            say("capture", null, extraStr);
+            return;
+          }
+          if (Math.random() < 0.15) say("good", null, extraStr);
+        })();
+
+        busy = true;
+        setTimeout(bot, 700);
+      }
+      function bot() {
+        if (over) return;
+        const L = lvl(cfg.elo),
+          r = pick(g, L.d, L.n);
+        if (r.m) {
+          const before = g.fen();
+          const m = g.move(r.m);
+          gameMoves.push({
+            san: m.san,
+            by: "bot",
+            fenBefore: before,
+            fenAfter: g.fen(),
+            from: m.from,
+            to: m.to,
+            captured: m.captured || null,
+            loss: null,
+          });
+          clk[1] += cfg.inc;
+          fx(m);
+          qualityBadgeOn = m.to;
+          qualityBadgeText = m.captured ? "best" : "good";
+          refreshOpeningName();
+        }
+        busy = false;
+        render();
+        clocks();
+        if (endCheck()) return;
+        setTimeout(async () => {
+          const ctx = gameContext();
+          if (ctx.myKingInCheck) {
+            setFace("panic");
+            facePulse();
+            const t = await ask("check", null, "Your OWN king is in check.");
+            out((t || R.myCheck()).trim(), "check");
+            return;
+          }
+          if (ctx.yourKingInCheck) {
+            setFace("check");
+            facePulse();
+            const t = await ask("check", null, "User king in check.");
+            out((t || R.check()).trim(), "check");
+            return;
+          }
+          if (Math.random() < 0.15) {
+            const t = await ask("idle", null, "You just moved.");
+            out((t || R.good()).trim(), "good");
+          }
+        }, 100);
+      }
+      function undo() {
+        if (!cfg.undo || busy || over) return;
+        const n = g.turn() === me ? 2 : 1;
+        for (let i = 0; i < n; i++) g.undo();
+        hist.pop();
+        gameMoves.splice(-n, n);
+        busy = false;
+        hint = null;
+        last = null;
+        qualityBadgeOn = null;
+        qualityBadgeText = null;
+        refreshOpeningName();
+        render();
+        cs("Rewound. Try again.");
+      }
+      function hintBtn() {
+        if (mode === "play") {
+          if (!cfg.hints || over || busy) return;
+          const r = pick(g, 2).m;
+          if (!r) return;
+          hint = [r.from, r.to];
+          cs("Hint: " + r.san);
+          render();
+        } else if (mode === "sq") {
+          cs("Square is " + tsq.toUpperCase());
+          flashOnce(tsq, "blunder");
+          render();
+        } else if (mode === "mate") {
+          if (over || busy) return;
+          const r = pick(g, 2).m;
+          if (!r) return;
+          hint = [r.from, r.to];
+          cs("Hint: " + r.san);
+          render();
+        }
+      }
+      function resign() {
+        if (over) return;
+        over = true;
+        say("lose");
+        fin(-1);
+        showEnd(-1, "Resignation");
+      }
+      function flipBoard() {
+        fl = !fl;
+        render();
+        closeOpt();
+      }
+      function toggleOpt() {
+        $("#optpanel").classList.toggle("on");
+      }
+      function closeOpt() {
+        $("#optpanel").classList.remove("on");
+      }
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest("#opt") && !e.target.closest("#optpanel"))
+          closeOpt();
+      });
+
+      function endCheck() {
+        if (!g.game_over()) return false;
+        over = true;
+        busy = false;
+        let r = 0,
+          reason = "";
+        if (g.in_checkmate()) {
+          const w = g.turn() === "w" ? "b" : "w";
+          r = w === me ? 1 : -1;
+          reason = "Checkmate";
+        } else if (g.in_stalemate()) {
+          r = 0;
+          reason = "Stalemate";
+        } else if (g.in_threefold_repetition()) {
+          r = 0;
+          reason = "Repetition";
+        } else if (g.insufficient_material()) {
+          r = 0;
+          reason = "Insufficient material";
+        } else if (g.in_draw()) {
+          r = 0;
+          reason = "50-move rule";
+        }
+        fin(r);
+        showEnd(r, reason);
+        return true;
+      }
+      function fin(r) {
+        clearInterval(tmr);
+        const al = hist.length
+          ? hist.reduce((a, x) => a + Math.min(x.loss, 600), 0) / hist.length
+          : 0;
+        const d = Math.max(
+          -30,
+          Math.min(
+            45,
+            Math.round(25 - al / 5) + (r > 0 ? 20 : r < 0 ? -10 : 0),
+          ),
+        );
+        S.iq = Math.max(400, S.iq + d);
+        S.games++;
+        hist.forEach((x) => {
+          if (x.loss > 250) {
+            const p =
+              x.n < 20 ? "opening" : x.n < 60 ? "middlegame" : "endgame";
+            S.weak[p] = (S.weak[p] || 0) + 1;
+          }
+        });
+        S.eloHistory = S.eloHistory || [];
+        S.eloHistory.push({ r: r, ts: Date.now() });
+        if (S.eloHistory.length > 5) S.eloHistory = S.eloHistory.slice(-5);
+        save();
+      }
+      function eloRecommendation() {
+        const recent = S.eloHistory.slice(-5);
+        if (recent.length < 5) return null;
+        const wins = recent.filter((x) => x.r > 0).length;
+        const losses = recent.filter((x) => x.r < 0).length;
+        if (wins >= 4)
+          return {
+            dir: "up",
+            msg: "You've won " + wins + " of your last 5. Time to level up?",
+          };
+        if (losses >= 4)
+          return {
+            dir: "down",
+            msg: "You've lost " + losses + " of your last 5. Maybe lower ELO.",
+          };
+        return null;
+      }
+      function showEnd(r, reason) {
+        stopMusicFade(400);
+        stopSfx();
+        const word = r > 0 ? END_WIN() : r < 0 ? END_LOSE() : END_DRAW();
+        const sub = r > 0 ? "You won" : r < 0 ? "You lost" : "Draw";
+        const blunders = gameMoves.filter((m) => m.loss > 250).length;
+        const best = gameMoves.filter(
+          (m) => m.loss != null && m.loss <= 5,
+        ).length;
+        const nice = gameMoves.filter(
+          (m) => m.loss != null && m.loss > 5 && m.loss <= 50,
+        ).length;
+        $("#endword").textContent = word;
+        $("#endsub").textContent = sub + " by " + reason;
+        $("#endstats").innerHTML =
+          `<div class="stat"><b>${best}</b><small>Best</small></div>
+    <div class="stat"><b>${nice}</b><small>Good</small></div>
+    <div class="stat"><b>${blunders}</b><small>Blunders</small></div>`;
+        setFace(r > 0 ? "win" : r < 0 ? "lose" : "idle");
+        setTimeout(() => {
+          if (r > 0) sfx("win", true);
+          else if (r < 0) sfx("lose", true);
+        }, 400);
+        if (r > 0) say("win");
+        else if (r < 0) say("lose");
+        else say("draw");
+        const rec = eloRecommendation();
+        if (rec) {
+          setTimeout(() => {
+            const card = $("#endcard");
+            const el = document.createElement("div");
+            el.style.cssText =
+              "background:rgba(250,204,21,.15);border:2px solid #facc15;border-radius:12px;padding:12px;margin:12px 0;font-size:13px;text-align:left";
+            el.innerHTML = "💡 <b>Coach tip:</b> " + rec.msg;
+            card.insertBefore(el, $("#endbtns"));
+          }, 1200);
+        }
+        const f = $("#fat");
+        f.innerHTML = `<div class="f1">GAME</div><div class="f2" style="color:${r > 0 ? "#4ade80" : r < 0 ? "#ef4444" : "#facc15"}">${sub.toUpperCase()}</div>`;
+        f.className = "on";
+        vib(r >= 0 ? [80, 40, 80] : [200, 80, 200]);
+        shake("bg");
+        setTimeout(() => {
+          f.className = "";
+          $("#end").className = "on";
+        }, 1400);
+      }
+      function closeEnd(opts) {
+        opts = opts || {};
+        stopSfx();
+        $("#end").className = "";
+        if (!opts.noTheme) startMenuMusic();
+      }
+      function rematch() {
+        closeEnd({ noTheme: true });
+        restartNow();
+      }
+
+      let rIdx = 0;
+      function startReview() {
+        closeEnd({ noTheme: true });
+        stopSfx();
+        if (!gameMoves.length) {
+          show("game");
+          return;
+        }
+        rIdx = 0;
+        rStep(0);
+        show("review");
+      }
+      function explainMove(mv) {
+        if (mv.loss == null) return "Opponent move.";
+        if (mv.loss > 250) {
+          return mv.best && mv.best !== mv.san
+            ? "Blunder. Better was " + mv.best + "."
+            : "Blunder.";
+        }
+        if (mv.loss > 120)
+          return "Mistake. Better was " + (mv.best || "something else") + ".";
+        if (mv.loss > 50) return "Inaccuracy. Small leak.";
+        if (mv.loss <= 5 && mv.captured) return "Best move. Clean capture.";
+        if (mv.loss <= 5) return "Best move. Keep it up.";
+        return "Solid.";
+      }
+      function rStep(delta) {
+        if (delta)
+          rIdx = Math.max(0, Math.min(gameMoves.length - 1, rIdx + delta));
+        const mv = gameMoves[rIdx];
+        if (!mv) return;
+        const c = new Chess(mv.fenAfter);
+        const bd = c.board();
+        const B = $("#rbd");
+        B.innerHTML = "";
+        const t = S.theme;
+        for (let r = 0; r < 8; r++)
+          for (let cc = 0; cc < 8; cc++) {
+            const p = bd[r][cc],
+              n = "abcdefgh"[cc] + (8 - r),
+              d = document.createElement("div");
+            const dark = (r + cc) % 2;
+            d.className = "sq " + (dark ? "dk" : "lt");
+            d.style.background = dark ? t.dk : t.lt;
+            if (p) d.innerHTML = PIECE_SVG(p.type, p.color);
+            if (mv.loss > 250 && mv.to === n) {
+              d.classList.add("blunder");
+              const b = document.createElement("span");
+              b.className = "badge";
+              b.textContent = "??";
+              d.appendChild(b);
+            }
+            B.appendChild(d);
+          }
+        const line = $("#rline");
+        if (mv.loss > 250 && mv.best && mv.fenBefore) {
+          try {
+            const before = new Chess(mv.fenBefore);
+            const legal = before.moves({ verbose: true });
+            const chosen = legal.find(
+              (x) =>
+                x.san.replace(/[+#?!]/g, "") === mv.best.replace(/[+#?!]/g, ""),
+            );
+            if (chosen) {
+              const fileToX = (f) => ("abcdefgh".indexOf(f) + 0.5) * 12.5;
+              const rankToY = (r) => (8 - r + 0.5) * 12.5;
+              line.setAttribute("x1", fileToX(chosen.from[0]));
+              line.setAttribute("y1", rankToY(+chosen.from[1]));
+              line.setAttribute("x2", fileToX(chosen.to[0]));
+              line.setAttribute("y2", rankToY(+chosen.to[1]));
+              line.setAttribute("opacity", "1");
+            } else line.setAttribute("opacity", "0");
+          } catch (e) {
+            line.setAttribute("opacity", "0");
+          }
+        } else line.setAttribute("opacity", "0");
+        let prefix = "";
+        if (rIdx < 12) {
+          const subHist = gameMoves.slice(0, rIdx + 1).map((x) => x.san);
+          const op = lookupOpening(subHist);
+          if (op) prefix = "📖 " + op.name + " · ";
+        }
+        $("#rcomment").textContent =
+          `${prefix}${rIdx + 1}/${gameMoves.length} · ${mv.san} — ${explainMove(mv)}`;
+        $("#rprev").disabled = rIdx === 0;
+        $("#rnext").disabled = rIdx >= gameMoves.length - 1;
+      }
+      function closeReview() {
+        show("game");
+      }
+
+      function leave() {
+        clearInterval(tmr);
+        over = true;
+        stopSfx();
+        show("menu");
+        startMenuMusic();
+      }
+
+      function prog() {
+        const w =
+          Object.entries(S.weak)
+            .sort((a, b) => b[1] - a[1])
+            .map((e) => e[0] + " (" + e[1] + ")")
+            .join(", ") || "none yet";
+        const rec = eloRecommendation();
+        let html = `<div class="row"><span>Chess IQ</span><b>${S.iq}</b></div>
+    <div class="row"><span>Games played</span><b>${S.games}</b></div>
+    <div class="row"><span>Weak spots</span><b>${w}</b></div>`;
+        if (rec)
+          html += `<div class="card" style="background:rgba(250,204,21,.12);border-left:3px solid #facc15"><h3 style="color:#facc15">💡 Coach recommendation</h3><p>${rec.msg}</p></div>`;
+        html += `<div class="card"><h3>📖 Journey</h3><p>Level ${S.journey.level + 1} · ${S.journey.completed.length} lessons complete</p>
+    <div class="progbar"><div style="width:${Math.min(100, S.journey.completed.length * 25)}%"></div></div></div>`;
+        $("#pg").innerHTML = html;
+        show("progs");
+      }
+
+      const JOURNEY_LEVELS = [
+        {
+          name: "Square Recognition",
+          drill: "sq",
+          req: 20,
+          desc: "Tap the square name. 20 correct to advance.",
+        },
+        {
+          name: "Piece Names",
+          drill: "pieces",
+          req: 15,
+          desc: "Identify each piece. 15 correct to advance.",
+        },
+        {
+          name: "Attacked Squares",
+          drill: "atk",
+          req: 12,
+          desc: "See where your pieces attack. 12 correct to advance.",
+        },
+        {
+          name: "Mate in 1",
+          drill: "mate",
+          req: 10,
+          desc: "Find the checkmate. 10 correct to advance.",
+        },
+      ];
+      function openTrain() {
+        const j = S.journey;
+        let cards = "";
+        JOURNEY_LEVELS.forEach((lv, i) => {
+          const done = j.completed.includes(i);
+          const current = j.level === i && !done;
+          const locked = i > j.level && !done;
+          const cls = done ? "done" : current ? "current" : "locked";
+          const p = drillProgress(lv.drill);
+          const progress = Math.min(100, ((p.done || 0) / lv.req) * 100);
+          cards += `<div class="lvlrow ${cls}">
+      <div><div class="lvlname">${done ? "✅" : current ? "▶️" : "🔒"} ${lv.name}</div>
+      <div class="lvlstat">${done ? "Complete" : locked ? "Locked" : p.done + "/" + lv.req + " · " + lv.desc}</div></div>
+    </div>
+    ${current ? `<div class="progbar" style="margin:4px 12px 12px"><div style="width:${progress}%"></div></div>` : ""}`;
+        });
+        $("#tlist").innerHTML = `<div id="journeycard">
+    <h3>🎯 Journey</h3>
+    <p>Level ${j.level + 1} of ${JOURNEY_LEVELS.length} · Complete each to unlock the next.</p>
+    ${cards}
+    ${j.level < JOURNEY_LEVELS.length ? `<button onclick="startJourneyLevel()">${j.completed.includes(j.level) ? "Start next level" : "Continue: " + JOURNEY_LEVELS[j.level].name}</button>` : "<button disabled>All levels complete! 🏆</button>"}
+  </div>`;
+        show("trainmenu");
+      }
+      function startJourneyLevel() {
+        const lv = JOURNEY_LEVELS[S.journey.level];
+        if (!lv) return;
+        startDrill(lv.drill);
+      }
+      function checkJourneyAdvance(drill) {
+        const lv = JOURNEY_LEVELS[S.journey.level];
+        if (!lv || lv.drill !== drill) return;
+        const p = drillProgress(drill);
+        if ((p.done || 0) >= lv.req) {
+          if (!S.journey.completed.includes(S.journey.level))
+            S.journey.completed.push(S.journey.level);
+          S.journey.level = Math.min(
+            S.journey.completed.length,
+            JOURNEY_LEVELS.length - 1,
+          );
+          save();
+          setTimeout(() => {
+            setFace("great");
+            facePulse();
+            cs(
+              "🎉 Level up! Unlocked: " +
+                (JOURNEY_LEVELS[S.journey.level]?.name || "All complete!"),
+            );
+          }, 600);
+        }
+      }
+      function drillProgress(id) {
+        S.training[id] = S.training[id] || { done: 0, streak: 0, best: 0 };
+        return S.training[id];
+      }
+      function startDrill(id) {
+        unlockAudio();
+        mode = id;
+        over = false;
+        busy = false;
+        sel = null;
+        tgt = [];
+        hint = null;
+        flash = {};
+        fl = false;
+        me = "w";
+        clearInterval(tmr);
+        $("#game").classList.add("tr");
+        show("game");
+        const p = drillProgress(id);
+        streak = p.streak;
+        if (id === "sq") {
+          g = new Chess();
+          g.clear();
+          nextSq();
+        } else if (id === "pieces") loadPieceDrill();
+        else if (id === "atk") loadAtkDrill();
+        else if (id === "mate") loadMate();
+        render();
+      }
+      function nextSq() {
+        const p = drillProgress("sq");
+        tsq =
+          "abcdefgh"[(Math.random() * 8) | 0] + ((1 + Math.random() * 8) | 0);
+        $("#tp").textContent =
+          "Tap " +
+          tsq.toUpperCase() +
+          " · streak " +
+          streak +
+          " · " +
+          p.done +
+          "/" +
+          JOURNEY_LEVELS[0].req;
+        sel = null;
+        tgt = [];
+      }
+      function trainSq(n) {
+        const p = drillProgress("sq");
+        flash = {};
+        if (n === tsq) {
+          p.done++;
+          streak++;
+          p.streak = streak;
+          p.best = Math.max(p.best, streak);
+          save();
+          flash[n] = "blunder";
+          setFace("good");
+          cs("Nice.");
+        } else {
+          p.done = Math.max(0, p.done);
+          streak = 0;
+          p.streak = 0;
+          save();
+          flash[n] = "blunder";
+          flash[tsq] = "blunder";
+          setFace("mistake");
+          cs("That was " + tsq.toUpperCase() + ".");
+        }
+        render();
+        setTimeout(() => {
+          flash = {};
+          nextSq();
+          render();
+        }, 900);
+        checkJourneyAdvance("sq");
+      }
+      function loadPieceDrill() {
+        g = new Chess();
+        g.clear();
+        const types = ["p", "n", "b", "r", "q"];
+        const t = types[(Math.random() * types.length) | 0];
+        const sq =
+          "abcdefgh"[(Math.random() * 8) | 0] + ((1 + Math.random() * 8) | 0);
+        g.put({ type: t, color: Math.random() < 0.5 ? "w" : "b" }, sq);
+        window._pieceTarget = { type: t, sq };
+        $("#tp").textContent =
+          "Tap the " +
+          { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen" }[t] +
+          " · streak " +
+          streak +
+          " · " +
+          drillProgress("pieces").done +
+          "/" +
+          JOURNEY_LEVELS[1].req;
+        sel = null;
+        tgt = [];
+      }
+      function trainPiece(n) {
+        const pt = window._pieceTarget;
+        if (!pt) return;
+        const p = g.get(n);
+        const ok = p && p.type === pt.type;
+        const d = drillProgress("pieces");
+        flash = {};
+        if (ok) {
+          d.done++;
+          streak++;
+          d.streak = streak;
+          d.best = Math.max(d.best, streak);
+          save();
+          flash[n] = "blunder";
+          setFace("good");
+        } else {
+          streak = 0;
+          d.streak = 0;
+          save();
+          flash[n] = "blunder";
+          if (pt.sq) flash[pt.sq] = "blunder";
+          setFace("mistake");
+        }
+        render();
+        setTimeout(() => {
+          flash = {};
+          loadPieceDrill();
+          render();
+        }, 900);
+        checkJourneyAdvance("pieces");
+      }
+      function loadAtkDrill() {
+        g = new Chess();
+        g.clear();
+        const types = ["n", "b", "r", "q"];
+        const t = types[(Math.random() * types.length) | 0];
+        const sq =
+          "abcdefgh"[(Math.random() * 8) | 0] + ((1 + Math.random() * 8) | 0);
+        g.put({ type: t, color: "w" }, sq);
+        const targets = g.moves({ square: sq, verbose: true }).map((m) => m.to);
+        window._atkTarget = {
+          type: t,
+          sq,
+          found: new Set(),
+          all: new Set(targets),
+        };
+        $("#tp").textContent =
+          "Tap ALL squares your " +
+          { n: "knight", b: "bishop", r: "rook", q: "queen" }[t] +
+          " attacks · streak " +
+          streak;
+        sel = sq;
+        tgt = [...targets];
+      }
+      function trainAtk(n) {
+        const A = window._atkTarget;
+        if (!A) return;
+        flash = {};
+        if (A.all.has(n)) {
+          A.found.add(n);
+          flash[n] = "blunder";
+        } else {
+          flash[n] = "blunder";
+          setFace("mistake");
+          render();
+          setTimeout(() => {
+            flash = {};
+            render();
+          }, 600);
+          return;
+        }
+        render();
+        if (A.found.size === A.all.size) {
+          const d = drillProgress("atk");
+          d.done++;
+          streak++;
+          d.streak = streak;
+          d.best = Math.max(d.best, streak);
+          save();
+          setFace("great");
+          setTimeout(() => {
+            flash = {};
+            loadAtkDrill();
+            render();
+          }, 900);
+          checkJourneyAdvance("atk");
+        }
+      }
+      const MT = [
+        "6k1/5ppp/8/8/8/8/5PPP/R5K1 w - - 0 1",
+        "r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
+        "7k/5Q2/6K1/8/8/8/8/8 w - - 0 1",
+        "6rk/6pp/8/6N1/8/8/8/6K1 w - - 0 1",
+        "8/8/8/8/8/1k6/8/K1R5 w - - 0 1",
+      ];
+      function loadMate() {
+        const p = drillProgress("mate");
+        mi = p.done % MT.length;
+        g = new Chess(MT[mi]);
+        sel = null;
+        tgt = [];
+        last = null;
+        hint = null;
+        $("#tp").textContent =
+          "Find mate in 1 · streak " +
+          streak +
+          " · " +
+          p.done +
+          "/" +
+          JOURNEY_LEVELS[3].req;
+      }
+      function trainMate(f, t) {
+        const m = g.move({ from: f, to: t, promotion: "q" });
+        if (!m) return;
+        sel = null;
+        tgt = [];
+        if (g.in_checkmate()) {
+          const d = drillProgress("mate");
+          d.done++;
+          streak++;
+          d.streak = streak;
+          d.best = Math.max(d.best, streak);
+          save();
+          fx(m);
+          render();
+          setFace("great");
+          setTimeout(() => {
+            loadMate();
+            render();
+          }, 1400);
+          checkJourneyAdvance("mate");
+        } else {
+          g.undo();
+          streak = 0;
+          const d = drillProgress("mate");
+          d.streak = 0;
+          save();
+          setFace("mistake");
+          $("#tp").textContent = "Find mate in 1 · streak 0";
+          render();
+        }
+      }
+
+      function openSettings() {
+        $("#musicvol").value = S.musicVol * 100;
+        $("#musicvolval").textContent = Math.round(S.musicVol * 100);
+        $("#sfxvol").value = S.sfxVol * 100;
+        $("#sfxvolval").textContent = Math.round(S.sfxVol * 100);
+        $("#musicmute").checked = S.musicMute;
+        $("#sfxmute").checked = S.sfxMute;
+        show("settings");
+      }
+
+      function applyTheme() {
+        const t = S.theme;
+        t.lt = $("#c-lt").value;
+        t.dk = $("#c-dk").value;
+        save();
+        document.documentElement.style.setProperty("--lt", t.lt);
+        document.documentElement.style.setProperty("--dk", t.dk);
+        if (["play", "mate", "sq", "pieces", "atk"].includes(mode)) render();
+      }
+      function openTheme() {
+        const t = S.theme;
+        $("#c-lt").value = t.lt;
+        $("#c-dk").value = t.dk;
+        show("theme");
+      }
+      function resetTheme() {
+        S.theme = { lt: "#7c3aed", dk: "#0a0416" };
+        save();
+        openTheme();
+        applyTheme();
+      }
+
+      function speak(t, p) {
+        if (!$("#vo") || !$("#vo").checked || !window.speechSynthesis) return;
+        try {
+          speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(
+            String(t).replace(/[^\x00-\x7F]/g, ""),
+          );
+          u.pitch = p || 0.9;
+          u.rate = 1.08;
+          speechSynthesis.speak(u);
+        } catch (e) {}
+      }
+      function flashOnce(sq, kind) {
+        flash[sq] = kind;
+        render();
+        setTimeout(() => {
+          delete flash[sq];
+          render();
+        }, 1500);
+      }
+
+      eloLab();
+      (function initTheme() {
+        const t = S.theme;
+        $("#c-lt").value = t.lt;
+        $("#c-dk").value = t.dk;
+        document.documentElement.style.setProperty("--lt", t.lt);
+        document.documentElement.style.setProperty("--dk", t.dk);
+      })();
+      window.addEventListener("load", () => {
+        const startOnFirstTap = () => {
+          unlockAudio();
+          startMenuMusic();
+          document.removeEventListener("click", startOnFirstTap);
+          document.removeEventListener("touchstart", startOnFirstTap);
+        };
+        document.addEventListener("click", startOnFirstTap, { once: true });
+        document.addEventListener("touchstart", startOnFirstTap, {
+          once: true,
+        });
+      });
+
+      /* ---- Debug helpers ---- */
+      window.testSfx = function (name) {
+        console.log(
+          "testSfx(" + name + ") | AC:",
+          AC && AC.state,
+          "| sfxVol:",
+          S.sfxVol,
+          "| mute:",
+          S.sfxMute,
+        );
+        sfx(name);
+      };
+      window.testAllSfx = function () {
+        const names = ["move", "capture", "check", "win", "lose"];
+        names.forEach((n, i) => setTimeout(() => sfx(n), i * 1100));
+      };
+      window.showPoolStatus = function () {
+        console.table(
+          Object.keys(POOL_SIZES).map((k) => ({
+            pool: k,
+            files: POOL_SIZES[k],
+            dead: !!poolDead[k],
+            fails: poolFailCount[k] || 0,
+          })),
+        );
+      };
+    </script>
+  </body>
+</html>
